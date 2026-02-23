@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DA-AI Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#050b14; --bg2:#0a1220; --bg3:#0f1c2e; --bg4:#152238;
+  --border:#1a2e48; --text:#dde6f0; --muted:#3d5a7a; --dim:#1a2e48;
+  --accent:#00d4aa; --openai:#00d4aa; --anthropic:#ff6b6b;
+  --google:#4ecdc4; --meta:#a78bfa; --xai:#ffd93d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#030710 0%,#0c1d36 60%,#030710 100%);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hdr-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:1.5px;background:linear-gradient(90deg,#00d4aa,#4ecdc4,#a78bfa,#ffd93d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-sub{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.hdr-kpis{display:flex;gap:6px;flex-wrap:wrap}
+.hkpi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 12px;text-align:center}
+.hkpi-l{font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.hkpi-v{font-size:12px;font-weight:700;margin-top:1px}
+
+/* FILTER TOOLBAR */
+.toolbar{background:#07101e;border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:0;flex-wrap:wrap;position:sticky;top:0;z-index:200}
+.toolbar-section{display:flex;align-items:center;gap:6px;padding:10px 14px 10px 0;border-right:1px solid var(--border)}
+.toolbar-section:last-child{border-right:none;margin-left:auto}
+.tbar-label{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-right:4px;white-space:nowrap}
+
+/* COMPANY CHIPS */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
+.chip:hover{border-color:#4a6a8a;color:var(--text)}
+.chip.selected{color:#000 !important;border-color:transparent;font-weight:700}
+.chip .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.chip-all{letter-spacing:1px}
+.chip-all.selected{background:#dde6f0;color:#050b14 !important}
+
+/* YEAR FILTER */
+.yr-chip{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:9px;cursor:pointer;transition:all .15s}
+.yr-chip:hover{border-color:#4a6a8a;color:var(--text)}
+.yr-chip.selected{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+
+/* FILTER STATUS */
+.fstatus{font-size:8px;color:var(--muted);letter-spacing:1px;padding-left:14px}
+.fstatus span{color:var(--accent)}
+
+/* TABS */
+.tabs{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto}
+.tab{padding:12px 20px;border:none;background:transparent;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+
+/* PAGES */
+.page{display:none;padding:20px 24px 40px;animation:fu .25s ease}
+.page.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;border-radius:0 0 8px 8px}
+.kpi:hover{border-color:#2a4a6a;transform:translateY(-1px)}
+.kpi.selected-kpi{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)22}
+.kpi-label{font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.kpi-val{font-size:20px;font-weight:700;line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:8px;color:var(--muted);line-height:1.4}
+.kpi-delta{font-size:8px;font-weight:700;margin-top:4px}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* CHART CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;transition:border-color .2s}
+.card:hover{border-color:#2a4a6a}
+.ctitle{font-size:8px;font-weight:600;letter-spacing:1.5px;color:#4a6a8a;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ctitle::before{content:'';width:2px;height:12px;background:var(--accent);border-radius:2px;flex-shrink:0}
+
+/* CUSTOM BAR */
+.hbar-wrap{display:flex;flex-direction:column;gap:8px}
+.hbar-row{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 4px;border-radius:4px;transition:background .15s}
+.hbar-row:hover{background:var(--bg3)}
+.hbar-lbl{font-size:9px;width:90px;flex-shrink:0;color:var(--text)}
+.hbar-track{flex:1;background:var(--bg3);border-radius:3px;height:18px;overflow:hidden;cursor:pointer}
+.hbar-fill{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-size:8px;font-weight:700;color:#000;transition:width .5s ease}
+
+/* STACKED */
+.sbar-wrap{display:flex;flex-direction:column;gap:10px}
+.sbar-row{cursor:pointer;padding:3px 4px;border-radius:4px;transition:all .15s}
+.sbar-row:hover{background:var(--bg3)}
+.sbar-lbl{font-size:9px;margin-bottom:4px}
+.sbar-track{display:flex;height:20px;border-radius:3px;overflow:hidden}
+.sbar-seg{display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(0,0,0,.8);transition:width .5s ease}
+
+/* TIMELINE */
+.tl{display:flex;flex-direction:column}
+.tl-row{display:flex;gap:12px;padding:8px 4px;border-bottom:1px solid var(--dim);cursor:pointer;border-radius:4px;transition:background .15s}
+.tl-row:hover{background:var(--bg3)}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-yr{font-size:9px;color:var(--muted);width:55px;flex-shrink:0}
+.tl-co{font-size:9px;font-weight:700;width:80px;flex-shrink:0}
+.tl-phase{font-size:9px;color:var(--muted);flex:1}
+.tl-g{font-size:10px;font-weight:700}
+
+/* METRIC CARDS */
+.mcards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.mcard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:3px solid;cursor:pointer;transition:all .2s}
+.mcard:hover{transform:translateY(-1px)}
+.mcard-l{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.mcard-v{font-size:18px;font-weight:700;line-height:1;margin-bottom:2px}
+.mcard-s{font-size:8px;color:var(--muted)}
+
+/* SCORE BARS */
+.sbars{display:flex;flex-direction:column;gap:8px}
+.sbar-item{display:flex;align-items:center;gap:8px}
+.sbar-nm{font-size:9px;width:90px;flex-shrink:0}
+.sbar-tk{flex:1;background:var(--bg3);border-radius:2px;height:12px;overflow:hidden}
+.sbar-fl{height:100%;border-radius:2px;transition:width .5s ease}
+.sbar-nv{font-size:9px;width:30px;text-align:right;color:var(--muted)}
+
+/* COLLAB */
+.collab-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ccard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.ccard-t{font-size:10px;font-weight:600;margin-bottom:5px}
+.ccard-s{display:flex;gap:14px;font-size:8px;color:var(--muted)}
+.ccard-p{display:flex;align-items:center;gap:6px;margin-top:7px}
+.cbar{flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.cfill{height:100%;border-radius:3px}
+
+/* WINNER */
+.winner{background:linear-gradient(135deg,#0c1c36,#152d48);border:1px solid #00d4aa22;border-radius:10px;padding:18px 22px;margin-bottom:14px;position:relative;overflow:hidden}
+.winner::after{content:'🏆';position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:40px;opacity:.12}
+.winner-tag{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.winner-name{font-size:17px;font-weight:700;font-family:'Syne',sans-serif;color:var(--accent);margin-bottom:3px}
+.winner-desc{font-size:9px;color:#7a9ab8;line-height:1.6}
+
+/* SUSTAINABILITY RANK */
+.rank-card{background:var(--bg3);border:1px solid;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.rank-card:hover{transform:translateY(-2px)}
+.rank-num{position:absolute;top:10px;right:14px;font-size:32px;font-weight:800;font-family:'Syne',sans-serif;opacity:.15}
+.rank-co{font-size:11px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:4px}
+.rank-score{font-size:22px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:6px}
+.rank-factors{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rf{font-size:7px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--muted)}
+
+/* BENCHMARK TABLE */
+.btable{width:100%;border-collapse:collapse;font-size:9px}
+.btable th{background:var(--bg3);color:var(--muted);padding:8px 10px;text-align:left;font-size:7px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.btable td{padding:8px 10px;border-bottom:1px solid var(--dim);transition:background .15s}
+.btable tr{cursor:pointer}
+.btable tr:hover td{background:var(--bg3)}
+.btable .model-name{font-weight:700}
+.btable .score-high{color:#00d4aa;font-weight:700}
+.btable .score-mid{color:#ffd93d;font-weight:700}
+.btable .score-low{color:#ff6b6b;font-weight:700}
+
+/* EMPTY STATE */
+.empty{padding:20px;text-align:center;color:var(--muted);font-size:9px;border:1px dashed var(--border);border-radius:6px}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr)}.g2,.g21{grid-template-columns:1fr}.mcards{grid-template-columns:repeat(2,1fr)}}
+canvas{max-width:100%}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">DA-AI INTELLIGENCE DASHBOARD</div>
+    <div class="hdr-sub">OpenAI · Anthropic · Google Gemini · Meta Llama · xAI Grok · 2022–2030</div>
+  </div>
+  <div class="hdr-kpis">
+    <div class="hkpi"><div class="hkpi-l">Market 2025</div><div class="hkpi-v" style="color:#00d4aa">$70B</div></div>
+    <div class="hkpi"><div class="hkpi-l">Market 2030</div><div class="hkpi-v" style="color:#4ecdc4">$500B</div></div>
+    <div class="hkpi"><div class="hkpi-l">Best Margin</div><div class="hkpi-v" style="color:#ff6b6b">Anth 77%</div></div>
+    <div class="hkpi"><div class="hkpi-l">Best LTV:CAC</div><div class="hkpi-v" style="color:#a78bfa">30:1</div></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-section">
+    <span class="tbar-label">Company</span>
+    <div class="chip chip-all selected" id="c-all" onclick="toggleCompany('all')">All</div>
+    <div class="chip" id="c-OpenAI"           onclick="toggleCompany('OpenAI')"><span class="dot" style="background:#00d4aa"></span>OpenAI</div>
+    <div class="chip" id="c-Anthropic"        onclick="toggleCompany('Anthropic')"><span class="dot" style="background:#ff6b6b"></span>Anthropic</div>
+    <div class="chip" id="c-Google (Gemini)"  onclick="toggleCompany('Google (Gemini)')"><span class="dot" style="background:#4ecdc4"></span>Google</div>
+    <div class="chip" id="c-Meta (Llama)"     onclick="toggleCompany('Meta (Llama)')"><span class="dot" style="background:#a78bfa"></span>Meta</div>
+    <div class="chip" id="c-xAI (Grok)"       onclick="toggleCompany('xAI (Grok)')"><span class="dot" style="background:#ffd93d"></span>xAI</div>
+  </div>
+  <div class="toolbar-section">
+    <span class="tbar-label">Year</span>
+    <div class="yr-chip selected" id="y-all"  onclick="toggleYear('all')">All Years</div>
+    <div class="yr-chip" id="y-2022" onclick="toggleYear('2022')">2022</div>
+    <div class="yr-chip" id="y-2023" onclick="toggleYear('2023')">2023</div>
+    <div class="yr-chip" id="y-2024" onclick="toggleYear('2024')">2024</div>
+    <div class="yr-chip" id="y-2025" onclick="toggleYear('2025')">2025</div>
+  </div>
+  <div class="toolbar-section">
+    <div class="fstatus" id="fstatus">Showing: <span>All Companies · All Years</span></div>
+    <div class="chip" style="margin-left:8px;font-size:8px;color:var(--muted)" onclick="resetAll()">✕ Reset</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab(0)">🏆 Overview</button>
+  <button class="tab" onclick="showTab(1)">📈 Revenue</button>
+  <button class="tab" onclick="showTab(2)">💰 Profitability</button>
+  <button class="tab" onclick="showTab(3)">⚖️ Valuation</button>
+  <button class="tab" onclick="showTab(4)">🎯 Sustainability</button>
+  <button class="tab" onclick="showTab(5)">🤖 AI Models</button>
+  <button class="tab" onclick="showTab(6)">🚀 Future Growth</button>
+</div>
+
+<!-- PAGE 0: OVERVIEW -->
+<div class="page active" id="page-0">
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="g21">
+    <div class="card"><div class="ctitle">ARR Growth 2022–2025 ($B)</div><div style="height:260px"><canvas id="arrLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">2025 Market Share %</div><div style="height:260px"><canvas id="shareDonut"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">2025 ARR Ranking ($B)</div><div class="hbar-wrap" id="arrBarsEl"></div></div>
+    <div class="card"><div class="ctitle">Monthly Active Users 2025 (M)</div><div style="height:200px"><canvas id="mauBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 1: REVENUE -->
+<div class="page" id="page-1">
+  <div class="g2">
+    <div class="card"><div class="ctitle">ARR Trend 2022–2025 ($B)</div><div style="height:260px"><canvas id="arrLine2"></canvas></div></div>
+    <div class="card"><div class="ctitle">Revenue Mix — Consumer / Enterprise / API</div><div class="sbar-wrap" id="segStack" style="margin-top:4px"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">YoY Revenue Growth %</div><div style="height:260px"><canvas id="growthBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">2025 Valuation vs ARR ($B)</div><div style="height:260px"><canvas id="valBar"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ctitle">Growth Phase Timeline</div><div class="tl" id="timeline"></div></div>
+</div>
+
+<!-- PAGE 2: PROFITABILITY -->
+<div class="page" id="page-2">
+  <div class="mcards" id="marginCards"></div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Gross Margin % Trend</div><div style="height:250px"><canvas id="marginLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">LTV:CAC Ratio 2025 — Target 3:1</div><div class="sbars" id="ltvcacEl" style="margin-top:6px"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">ARPU ($) — Avg Revenue Per User</div><div style="height:220px"><canvas id="arpuBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Collaboration Synergy ($B)</div><div style="height:220px"><canvas id="synergyBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 3: VALUATION MULTIPLES -->
+<div class="page" id="page-3">
+  <div class="winner">
+    <div class="winner-tag">⚖️ Valuation Analysis 2025</div>
+    <div class="winner-name" id="valWinner">Most Undervalued: Anthropic at 20.3× ARR</div>
+    <div class="winner-desc">Industry avg: 30× ARR. Anthropic and OpenAI trading at discount to peers. xAI most expensive at 71.9× despite lowest revenue. Google and Meta trade on total company multiples (not AI-specific).</div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Valuation Multiple (Price ÷ ARR) — Lower = Better Value</div><div style="height:240px"><canvas id="multipleBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Valuation vs ARR Scatter — Fair Value Line</div><div style="height:240px"><canvas id="valScatter"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Enterprise Value / Revenue 2025</div><div class="hbar-wrap" id="evRevenueEl"></div></div>
+    <div class="card"><div class="ctitle">Market Cap Comparison ($B)</div><div style="height:220px"><canvas id="marketCapBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 4: SUSTAINABILITY SCORE -->
+<div class="page" id="page-4">
+  <div class="winner">
+    <div class="winner-tag">🎯 Sustainability Ranking — Who Will Win Long-Term?</div>
+    <div class="winner-name" id="sustWinner">Winner: Anthropic — Score 91 / 100</div>
+    <div class="winner-desc">Composite score: Gross Margin (25%), LTV:CAC (25%), Burn Multiple (20%), YoY Growth (15%), Enterprise Mix (15%). Anthropic leads on capital efficiency + unit economics. OpenAI strong on growth + scale. Google/Meta already profitable but slower AI growth.</div>
+  </div>
+  <div class="g3" id="sustainRanks"></div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Sustainability Score Breakdown</div><div style="height:280px"><canvas id="sustRadar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Path to Profitability Timeline</div><div class="tl" id="profitTimeline"></div></div>
+  </div>
+  <div class="card"><div class="ctitle">Capital Efficiency vs Growth — Top Right = Best</div><div style="height:260px"><canvas id="efficiencyScatter"></canvas></div></div>
+</div>
+
+<!-- PAGE 5: AI MODELS -->
+<div class="page" id="page-5">
+  <div class="winner">
+    <div class="winner-tag">🤖 AI Model Intelligence Rankings</div>
+    <div class="winner-name" id="modelWinner">Smartest Overall: Claude 3.5 Sonnet — 88.7 / 100</div>
+    <div class="winner-desc">Based on MMLU (general knowledge), HumanEval (coding), MATH (reasoning), GPQA (expert Q&A). Claude 3.5 leads in coding + reasoning. GPT-4o best balanced. Gemini 2.0 Flash strong on speed + intelligence. Meta's Llama 4 70B impresses for open-source.</div>
+  </div>
+  <div class="card"><div class="ctitle">AI Model Benchmark Scores — Higher = Smarter</div><table class="btable" id="benchTable"></table></div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Coding Performance (HumanEval Pass@1)</div><div style="height:240px"><canvas id="codingBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Reasoning Performance (MATH + GPQA)</div><div style="height:240px"><canvas id="reasonBar"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">Overall Intelligence Ranking</div><div style="height:240px"><canvas id="overallBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Model Capabilities Radar</div><div style="height:240px"><canvas id="radarChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 6: FUTURE GROWTH -->
+<div class="page" id="page-6">
+  <div class="mcards" id="projCards"></div>
+  <div class="g21">
+    <div class="card"><div class="ctitle">Revenue Projection 2025→2030 Base Case ($B)</div><div style="height:280px"><canvas id="projLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">Total AI Market Size ($B)</div><div style="height:280px"><canvas id="mktArea"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">2030 Scenarios — Bull / Base / Bear ($B)</div><div style="height:240px"><canvas id="scenarioBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">Partnership Scenarios</div><div class="collab-grid" id="collabGrid"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════ DATA ════════════════════════════════
+const ALL_COS=['OpenAI','Anthropic','Google (Gemini)','Meta (Llama)','xAI (Grok)'];
+const COL={'OpenAI':'#00d4aa','Anthropic':'#ff6b6b','Google (Gemini)':'#4ecdc4','Meta (Llama)':'#a78bfa','xAI (Grok)':'#ffd93d'};
+
+const ARR={
+  'OpenAI':      {'2022':0.028,'2023':2.0,'2024':3.7,'2025':20.0},
+  'Anthropic':   {'2022':0.01,'2023':0.1,'2024':0.85,'2025':9.0},
+  'xAI (Grok)':  {'2024':0.1,'2025':3.2},
+  'Google (Gemini)':{'2023':2.0,'2024':8.0,'2025':25.0},
+  'Meta (Llama)':{'2023':1.0,'2024':5.0,'2025':15.0},
+};
+const MARGIN={
+  'OpenAI':{'2023':15,'2024':20,'2025':50},
+  'Anthropic':{'2023':40,'2024':55,'2025':77},
+  'xAI (Grok)':{'2024':15,'2025':25},
+  'Google (Gemini)':{'2023':45,'2024':50,'2025':55},
+  'Meta (Llama)':{'2023':80,'2024':81,'2025':82},
+};
+const MAU={'OpenAI':600,'Google (Gemini)':450,'Meta (Llama)':600,'xAI (Grok)':64,'Anthropic':30};
+const SHARE={'OpenAI':60.6,'Anthropic':12,'xAI (Grok)':3.5,'Google (Gemini)':13.4,'Meta (Llama)':10};
+const ARR25={'OpenAI':20,'Anthropic':9,'xAI (Grok)':3.2,'Google (Gemini)':25,'Meta (Llama)':15};
+const VAL25={'OpenAI':300,'Anthropic':183,'xAI (Grok)':230,'Google (Gemini)':2000,'Meta (Llama)':1400};
+const GROWTH={
+  'OpenAI':[5614,131,251],'Anthropic':[900,750,488],
+  'xAI (Grok)':[null,null,1400],'Google (Gemini)':[null,14,9],'Meta (Llama)':[null,41,15],
+};
+const ARPU_D={
+  'Anthropic':{'2023':200,'2024':85,'2025':166.7},
+  'OpenAI':{'2023':32,'2024':24.7,'2025':21.7},
+  'xAI (Grok)':{'2024':20,'2025':23.4},
+};
+const SEG={
+  'OpenAI':{c:60,e:35,a:5},'Anthropic':{c:20,e:80,a:0},
+  'Google (Gemini)':{c:30,e:40,a:30},'Meta (Llama)':{c:0,e:30,a:70},'xAI (Grok)':{c:70,e:20,a:10},
+};
+const LTVCAC={'Anthropic':30.0,'OpenAI':22.3,'xAI (Grok)':10.5};
+const BURN_MULT={'Anthropic':0.6,'OpenAI':1.2,'xAI (Grok)':2.8}; // Lower = better efficiency
+const PROJ={
+  'OpenAI':[20,29.4,75,125],'Anthropic':[9,20,70,100],
+  'xAI (Grok)':[3.2,5,14,25],'Google (Gemini)':[25,50,120,200],'Meta (Llama)':[15,25,60,100],
+};
+const BULL={'OpenAI':200,'Anthropic':150,'Google (Gemini)':300,'xAI (Grok)':50,'Meta (Llama)':150};
+const BASE={'OpenAI':125,'Anthropic':100,'Google (Gemini)':200,'xAI (Grok)':25,'Meta (Llama)':100};
+const BEAR={'OpenAI':80,'Anthropic':60,'Google (Gemini)':130,'xAI (Grok)':15,'Meta (Llama)':60};
+const MARGIN_INFO={
+  'OpenAI':{m:50,burn:'$9B',note:'Net Loss: $8B'},
+  'Anthropic':{m:77,burn:'$3B',note:'Near Profitable'},
+  'Google (Gemini)':{m:55,burn:'$80B',note:'Profit: $111B'},
+  'Meta (Llama)':{m:82,burn:'$71B',note:'Profit: $70B'},
+  'xAI (Grok)':{m:25,burn:'$13B',note:'Net Loss: $11.5B'},
+};
+const PROJ_INFO={
+  'OpenAI':{base:'$125B',bull:'$200B',yr:2029},
+  'Anthropic':{base:'$100B',bull:'$150B',yr:2027},
+  'Google (Gemini)':{base:'$200B',bull:'$300B',yr:2024},
+  'Meta (Llama)':{base:'$100B',bull:'$150B',yr:2025},
+  'xAI (Grok)':{base:'$25B',bull:'$50B',yr:2030},
+};
+const TL_DATA=[
+  {yr:'2022→23',co:'OpenAI',phase:'ChatGPT Explosive Launch',g:'+5614%'},
+  {yr:'2023→24',co:'OpenAI',phase:'GPT-4 Enterprise Scale',g:'+131%'},
+  {yr:'2024→25',co:'OpenAI',phase:'Market Maturation / AWS Deal',g:'+251%'},
+  {yr:'2022→23',co:'Anthropic',phase:'Claude 1 & 2 — Initial Traction',g:'+900%'},
+  {yr:'2023→24',co:'Anthropic',phase:'Claude 3 Enterprise Breakthrough',g:'+750%'},
+  {yr:'2024→25',co:'Anthropic',phase:'Scaling Excellence — $183B Val.',g:'+488%'},
+  {yr:'2024→25',co:'xAI (Grok)',phase:'Aggressive Expansion — Grok 4',g:'+1400%'},
+  {yr:'2023→24',co:'Google (Gemini)',phase:'Gemini 1.0 Launch',g:'+300%'},
+  {yr:'2024→25',co:'Google (Gemini)',phase:'Gemini 2.0 Steady Growth',g:'+9%'},
+  {yr:'2023→24',co:'Meta (Llama)',phase:'Llama 2 Open Source Adoption',g:'+41%'},
+  {yr:'2024→25',co:'Meta (Llama)',phase:'Llama 4 — Mainstream Usage',g:'+15%'},
+];
+
+// NEW: Valuation Multiples
+const VAL_MULT={'OpenAI':15.0,'Anthropic':20.3,'xAI (Grok)':71.9,'Google (Gemini)':80.0,'Meta (Llama)':93.3};
+
+// NEW: AI Model Benchmarks (out of 100)
+const BENCHMARKS={
+  'Claude 3.5 Sonnet':   {co:'Anthropic',      mmlu:88.7,code:92.0,math:78.3,gpqa:65.0,overall:88.7},
+  'GPT-4o':              {co:'OpenAI',         mmlu:88.0,code:90.2,math:76.6,gpqa:53.6,overall:87.8},
+  'Gemini 2.0 Flash':    {co:'Google (Gemini)',mmlu:86.9,code:88.3,math:74.0,gpqa:50.1,overall:85.6},
+  'o1-preview':          {co:'OpenAI',         mmlu:90.8,code:71.7,math:85.5,gpqa:72.3,overall:87.2},
+  'Grok 2':              {co:'xAI (Grok)',     mmlu:87.5,code:88.0,math:76.1,gpqa:56.0,overall:84.9},
+  'Llama 4 70B':         {co:'Meta (Llama)',   mmlu:86.0,code:84.2,math:68.0,gpqa:46.7,overall:82.3},
+};
+
+const RADAR_V={
+  'OpenAI':[9.5,7.5,9.8,9.0,8.7,8.5],
+  'Anthropic':[9.6,7.0,9.5,9.2,8.55,9.5],
+  'Google (Gemini)':[9.3,8.5,9.7,8.8,8.69,7.5],
+  'Meta (Llama)':[8.9,10,8.5,7.5,7.0,7.0],
+  'xAI (Grok)':[8.7,6.5,9.0,7.0,7.2,7.0],
+};
+
+// ═══════════════════════════════════════ STATE ════════════════════════════════
+let selCompanies=new Set();
+let selYear='all';
+const charts={};
+
+// ═══════════════════════════════════════ HELPERS ══════════════════════════════
+function ha(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function getCos(){return selCompanies.size===0?ALL_COS:ALL_COS.filter(c=>selCompanies.has(c));}
+function getARRVal(co,yr){const v=ARR[co]?.[yr];return(v!==undefined)?v:null;}
+
+Chart.defaults.color='#4a6a8a';
+Chart.defaults.borderColor='#1a2e48';
+Chart.defaults.font.family="'IBM Plex Mono',monospace";
+Chart.defaults.font.size=9;
+const grd={color:'#0f1c2e',lineWidth:1};
+const tck={color:'#3d5a7a',font:{size:9}};
+const ttp={backgroundColor:'#0a1220',borderColor:'#1a2e48',borderWidth:1,titleColor:'#7a9ab8',bodyColor:'#dde6f0',padding:9,titleFont:{size:10},bodyFont:{size:9}};
+function bOpts(yL=''){
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a6a8a',font:{size:9},boxWidth:9,padding:10}},tooltip:ttp},
+    scales:{x:{grid:grd,ticks:tck},y:{grid:grd,ticks:tck,title:{display:!!yL,text:yL,color:'#3d5a7a',font:{size:8}}}}
+  };
+}
+function mkChart(id,type,data,opts){
+  if(charts[id]){charts[id].destroy();}
+  const ctx=document.getElementById(id);if(!ctx)return;
+  charts[id]=new Chart(ctx,{type,data,options:opts});
+  ctx.onclick=(e)=>{
+    const pts=charts[id].getElementsAtEventForMode(e,'nearest',{intersect:true},true);
+    if(pts.length){
+      const idx=pts[0].index;
+      const lbl=charts[id].data.labels?.[idx];
+      const ds=charts[id].data.datasets?.[pts[0].datasetIndex];
+      const candidate=findCompany(lbl)||findCompany(ds?.label);
+      if(candidate)triggerCrossFilter(candidate);
+    }
+  };
+}
+function findCompany(str){
+  if(!str)return null;
+  for(const c of ALL_COS){
+    const short=c.split(' ')[0];
+    if(str===c||str===short||str.includes(short))return c;
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════ CROSS FILTER ════════════════════════
+function triggerCrossFilter(company){
+  if(selCompanies.size===1&&selCompanies.has(company)){
+    selCompanies.clear();
+  }else{
+    selCompanies.clear();
+    selCompanies.add(company);
+  }
+  syncChipUI();
+  renderAll();
+}
+
+function toggleCompany(co){
+  if(co==='all'){
+    selCompanies.clear();
+  }else{
+    if(selCompanies.has(co)){
+      selCompanies.delete(co);
+    }else{
+      selCompanies.clear();
+      selCompanies.add(co);
+    }
+  }
+  syncChipUI();
+  renderAll();
+}
+
+function toggleYear(yr){
+  selYear=(selYear===yr)?'all':yr;
+  document.querySelectorAll('.yr-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById(yr==='all'?'y-all':`y-${yr}`).classList.add('selected');
+  renderAll();
+}
+
+function resetAll(){
+  selCompanies.clear();
+  selYear='all';
+  document.querySelectorAll('.yr-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('y-all').classList.add('selected');
+  syncChipUI();
+  renderAll();
+}
+
+function syncChipUI(){
+  document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('selected');c.style.background='';c.style.color='';c.style.borderColor='';});
+  if(selCompanies.size===0){
+    document.getElementById('c-all').classList.add('selected');
+  }else{
+    selCompanies.forEach(co=>{
+      const btn=document.getElementById(`c-${co}`);
+      if(btn){btn.classList.add('selected');btn.style.background=COL[co];btn.style.color='#000';btn.style.borderColor=COL[co];}
+    });
+  }
+  const cos=getCos();
+  const coStr=cos.length===ALL_COS.length?'All Companies':cos.map(c=>c.split(' ')[0]).join(', ');
+  const yrStr=selYear==='all'?'All Years':selYear;
+  document.getElementById('fstatus').innerHTML=`Showing: <span>${coStr} · ${yrStr}</span>`;
+}
+
+// ═══════════════════════════════════════ CALCULATIONS ════════════════════════
+function calcKPIs(cos){
+  const totalARR=cos.reduce((s,c)=>s+(ARR25[c]||0),0);
+  const avgMargin=cos.reduce((s,c)=>s+(MARGIN_INFO[c]?.m||0),0)/cos.length;
+  const totalMAU=cos.reduce((s,c)=>s+(MAU[c]||0),0);
+  const totalShare=cos.reduce((s,c)=>s+(SHARE[c]||0),0);
+  const bestLTVCo=cos.filter(c=>LTVCAC[c]).sort((a,b)=>LTVCAC[b]-LTVCAC[a])[0];
+  const bestLTV=bestLTVCo?LTVCAC[bestLTVCo]:null;
+  const totalVal=cos.reduce((s,c)=>s+(VAL25[c]||0),0);
+
+  return[
+    {label:'Total ARR 2025',val:`$${totalARR.toFixed(1)}B`,sub:`${cos.length} compan${cos.length>1?'ies':'y'}`,col:cos.length===1?COL[cos[0]]:'#00d4aa'},
+    {label:'Avg Gross Margin',val:`${avgMargin.toFixed(0)}%`,sub:'2025 average',col:'#4ecdc4'},
+    {label:'Total MAU 2025',val:`${totalMAU}M`,sub:'Monthly Active Users',col:'#a78bfa'},
+    {label:'Market Share',val:`${totalShare.toFixed(1)}%`,sub:'2025 combined share',col:'#ffd93d'},
+    {label:'Best LTV:CAC',val:bestLTV?`${bestLTV}:1`:'N/A',sub:bestLTVCo?bestLTVCo.split(' ')[0]:'',col:'#ff6b6b'},
+    {label:'Total Valuation',val:`$${(totalVal/1000).toFixed(1)}T`,sub:'Combined 2025',col:'#00d4aa'},
+  ];
+}
+
+function calcSustainability(co){
+  // Composite: Margin(25) + LTV:CAC(25) + Burn Mult(20) + Growth(15) + Enterprise Mix(15) = 100
+  const margin=(MARGIN_INFO[co]?.m||0)/77*25; // normalize to Anthropic's 77%
+  const ltv=(LTVCAC[co]||0)/30*25; // normalize to 30
+  const burn=(BURN_MULT[co])?((3-BURN_MULT[co])/3*20):0; // lower=better, inverse
+  const growth=(GROWTH[co]?.[2]||0)/1400*15; // normalize to xAI's 1400%
+  const entMix=(SEG[co]?.e||0)/80*15; // normalize to Anthropic's 80%
+  return Math.round(margin+ltv+burn+growth+entMix);
+}
+
+// ═══════════════════════════════════════ RENDER ALL ══════════════════════════
+function renderAll(){
+  const cos=getCos();
+  renderKPIs(cos);
+  renderP0(cos);
+  renderP1(cos);
+  renderP2(cos);
+  renderP3(cos); // Valuation
+  renderP4(cos); // Sustainability
+  renderP5(cos); // AI Models
+  renderP6(cos);
+}
+
+function renderKPIs(cos){
+  const kpis=calcKPIs(cos);
+  document.getElementById('kpi-row').innerHTML=kpis.map(k=>`
+    <div class="kpi" style="border-top:2px solid ${k.col}44">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ─── PAGE 0 ──────────────────────────────────────────────────────────────────
+function renderP0(cos){
+  const years=['2022','2023','2024','2025'];
+  const filtYears=selYear==='all'?years:years.filter(y=>y===selYear);
+
+  mkChart('arrLine','line',{
+    labels:filtYears,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],spanGaps:true,tension:.4,fill:true,
+      data:filtYears.map(y=>getARRVal(c,y)),
+      borderColor:COL[c],backgroundColor:ha(COL[c],.07),
+      borderWidth:2.5,pointRadius:5,pointBackgroundColor:COL[c],pointHoverRadius:8,
+    }))
+  },bOpts('ARR ($B)'));
+
+  mkChart('shareDonut','doughnut',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{data:cos.map(c=>SHARE[c]||0),backgroundColor:cos.map(c=>COL[c]),borderColor:'#050b14',borderWidth:3,hoverOffset:10}]
+  },{
+    responsive:true,maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{position:'right',labels:{color:'#7a9ab8',font:{size:9},boxWidth:9,padding:8}},tooltip:{...ttp,callbacks:{label:c=>`${c.label}: ${c.raw}%`}}},
+    onClick:(e,els)=>{if(els.length){const lbl=charts['shareDonut'].data.labels[els[0].index];const co=findCompany(lbl);if(co)triggerCrossFilter(co);}}
+  });
+
+  const sorted=[...cos].sort((a,b)=>(ARR25[b]||0)-(ARR25[a]||0));
+  const maxV=Math.max(...sorted.map(c=>ARR25[c]||0),1);
+  document.getElementById('arrBarsEl').innerHTML=sorted.map(c=>`
+    <div class="hbar-row" onclick="triggerCrossFilter('${c}')">
+      <div class="hbar-lbl" style="color:${COL[c]}">${c.split(' ')[0]}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${((ARR25[c]||0)/maxV*100).toFixed(1)}%;background:${COL[c]}">$${ARR25[c]}B</div>
+      </div>
+    </div>`).join('');
+
+  mkChart('mauBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{label:'MAU (M)',data:cos.map(c=>MAU[c]||0),backgroundColor:cos.map(c=>COL[c]),borderRadius:5,borderSkipped:false}]
+  },{...bOpts('MAU (M)'),plugins:{...bOpts().plugins,legend:{display:false}},
+    onClick:(e,els)=>{if(els.length){const lbl=charts['mauBar'].data.labels[els[0].index];const co=findCompany(lbl);if(co)triggerCrossFilter(co);}}
+  });
+}
+
+// ─── PAGE 1 ──────────────────────────────────────────────────────────────────
+function renderP1(cos){
+  const years=['2022','2023','2024','2025'];
+  const filtYears=selYear==='all'?years:years.filter(y=>y===selYear);
+
+  mkChart('arrLine2','line',{
+    labels:filtYears,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],spanGaps:true,tension:.4,fill:true,
+      data:filtYears.map(y=>getARRVal(c,y)),
+      borderColor:COL[c],backgroundColor:ha(COL[c],.06),
+      borderWidth:2.5,pointRadius:5,pointBackgroundColor:COL[c],pointHoverRadius:8,
+    }))
+  },bOpts('ARR ($B)'));
+
+  document.getElementById('segStack').innerHTML=cos.map(c=>{
+    const d=SEG[c];
+    return `<div class="sbar-row" onclick="triggerCrossFilter('${c}')">
+      <div class="sbar-lbl" style="color:${COL[c]}">${c.split(' ')[0]}</div>
+      <div class="sbar-track">
+        ${d.c?`<div class="sbar-seg" style="width:${d.c}%;background:#00d4aa">${d.c}%</div>`:''}
+        ${d.e?`<div class="sbar-seg" style="width:${d.e}%;background:#a78bfa">${d.e}%</div>`:''}
+        ${d.a?`<div class="sbar-seg" style="width:${d.a}%;background:#ffd93d">${d.a}%</div>`:''}
+      </div>
+    </div>`;
+  }).join('')+`<div style="display:flex;gap:12px;margin-top:8px;font-size:8px;color:#3d5a7a">
+    <span><span style="color:#00d4aa">■</span> Consumer</span>
+    <span><span style="color:#a78bfa">■</span> Enterprise</span>
+    <span><span style="color:#ffd93d">■</span> API</span></div>`;
+
+  const periods=['2022→23','2023→24','2024→25'];
+  const filtPeriods=selYear==='all'?periods:periods.filter(p=>p.includes(selYear));
+  const periodIdx={'2022→23':0,'2023→24':1,'2024→25':2};
+  mkChart('growthBar','bar',{
+    labels:filtPeriods,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:filtPeriods.map(p=>(GROWTH[c]||[])[periodIdx[p]]??null),
+      backgroundColor:COL[c],borderRadius:4,
+    }))
+  },bOpts('Growth %'));
+
+  mkChart('valBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[
+      {label:'Valuation $B',data:cos.map(c=>VAL25[c]||0),backgroundColor:cos.map(c=>ha(COL[c],.55)),borderRadius:4},
+      {label:'ARR $B',data:cos.map(c=>ARR25[c]||0),backgroundColor:cos.map(c=>COL[c]),borderRadius:4},
+    ]
+  },bOpts('$B'));
+
+  const rows=TL_DATA.filter(t=>{
+    if(!cos.includes(t.co))return false;
+    if(selYear==='all')return true;
+    return t.yr.includes(selYear);
+  });
+  document.getElementById('timeline').innerHTML=rows.length?rows.map(d=>`
+    <div class="tl-row" onclick="triggerCrossFilter('${d.co}')">
+      <div class="tl-dot" style="background:${COL[d.co]}"></div>
+      <div class="tl-yr">${d.yr}</div>
+      <div class="tl-co" style="color:${COL[d.co]}">${d.co.split(' ')[0]}</div>
+      <div class="tl-phase">${d.phase}</div>
+      <div class="tl-g" style="color:${COL[d.co]}">${d.g}</div>
+    </div>`).join(''):`<div class="empty">No timeline entries match current filter</div>`;
+}
+
+// ─── PAGE 2 ──────────────────────────────────────────────────────────────────
+function renderP2(cos){
+  const mYears=['2023','2024','2025'];
+  const filtMY=selYear==='all'?mYears:mYears.filter(y=>y===selYear);
+
+  document.getElementById('marginCards').innerHTML=cos.map(c=>{
+    const d=MARGIN_INFO[c];
+    return `<div class="mcard" style="border-top-color:${COL[c]}" onclick="triggerCrossFilter('${c}')">
+      <div class="mcard-l">${c.split(' ')[0]} Margin</div>
+      <div class="mcard-v" style="color:${COL[c]}">${d.m}%</div>
+      <div class="mcard-s">Burn: ${d.burn} | ${d.note}</div>
+    </div>`;
+  }).join('');
+
+  mkChart('marginLine','line',{
+    labels:filtMY,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],spanGaps:true,tension:.4,fill:true,
+      data:filtMY.map(y=>MARGIN[c]?.[y]??null),
+      borderColor:COL[c],backgroundColor:ha(COL[c],.06),
+      borderWidth:2.5,pointRadius:6,pointBackgroundColor:COL[c],pointHoverRadius:8,
+    }))
+  },bOpts('Gross Margin (%)'));
+
+  const ltcos=cos.filter(c=>LTVCAC[c]);
+  const ltEl=document.getElementById('ltvcacEl');
+  ltEl.innerHTML=`<div style="margin-bottom:8px;font-size:8px;color:#3d5a7a"><span style="color:#00d4aa">●</span> Above 3:1 target is passing</div>`;
+  ltEl.innerHTML+=ltcos.length?ltcos.map(c=>{
+    const pct=Math.min(100,(LTVCAC[c]/35)*100);
+    return `<div class="sbar-item" onclick="triggerCrossFilter('${c}')" style="cursor:pointer;margin-bottom:8px">
+      <div class="sbar-nm" style="color:${COL[c]}">${c.split(' ')[0]}</div>
+      <div class="sbar-tk"><div class="sbar-fl" style="width:${pct}%;background:${COL[c]}"></div></div>
+      <div class="sbar-nv" style="color:${COL[c]};font-weight:700">${LTVCAC[c]}</div>
+    </div>`;
+  }).join(''):`<div class="empty">No LTV:CAC data for selection</div>`;
+
+  const arpuCos=cos.filter(c=>ARPU_D[c]);
+  const filtAY=selYear==='all'?['2023','2024','2025']:['2023','2024','2025'].filter(y=>y===selYear);
+  if(arpuCos.length&&filtAY.length){
+    mkChart('arpuBar','bar',{
+      labels:arpuCos.map(c=>c.split(' ')[0]),
+      datasets:filtAY.map(y=>({
+        label:y,
+        data:arpuCos.map(c=>ARPU_D[c]?.[y]??null),
+        backgroundColor:arpuCos.map(c=>ha(COL[c],y==='2023'?.3:y==='2024'?.6:1)),
+        borderRadius:4,
+      }))
+    },bOpts('ARPU ($)'));
+  }
+
+  mkChart('synergyBar','bar',{
+    labels:['OpenAI+MSFT','Anth+GCP','Meta Open','xAI+Tesla'],
+    datasets:[
+      {label:'Synergy $B',data:[50,25,20,15],backgroundColor:'#a78bfa',borderRadius:4},
+      {label:'Probability %',data:[70,50,90,60],backgroundColor:'#4ecdc4',borderRadius:4},
+    ]
+  },bOpts());
+}
+
+// ─── PAGE 3: VALUATION ────────────────────────────────────────────────────────
+function renderP3(cos){
+  // Update winner card
+  const sorted=[...cos].sort((a,b)=>(VAL_MULT[a]||999)-(VAL_MULT[b]||999));
+  const best=sorted[0];
+  document.getElementById('valWinner').textContent=`Most Undervalued: ${best.split(' ')[0]} at ${VAL_MULT[best].toFixed(1)}× ARR`;
+
+  // Multiple bar
+  mkChart('multipleBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{
+      label:'Price ÷ ARR Multiple',
+      data:cos.map(c=>VAL_MULT[c]||0),
+      backgroundColor:cos.map(c=>COL[c]),
+      borderRadius:5,borderSkipped:false,
+    }]
+  },{...bOpts('Valuation Multiple (×)'),plugins:{...bOpts().plugins,legend:{display:false}}});
+
+  // Valuation scatter
+  mkChart('valScatter','scatter',{
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:[{x:ARR25[c]||0,y:VAL25[c]||0}],
+      backgroundColor:COL[c],
+      pointRadius:8,pointHoverRadius:12,
+    })).concat([{
+      label:'Fair Value (30× ARR)',
+      data:[{x:0,y:0},{x:25,y:750}],
+      borderColor:'#3d5a7a',
+      borderDash:[5,5],borderWidth:2,
+      type:'line',pointRadius:0,fill:false,
+    }])
+  },{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a6a8a',font:{size:9},boxWidth:9,padding:10}},tooltip:ttp},
+    scales:{
+      x:{grid:grd,ticks:tck,title:{display:true,text:'ARR ($B)',color:'#3d5a7a',font:{size:8}}},
+      y:{grid:grd,ticks:tck,title:{display:true,text:'Valuation ($B)',color:'#3d5a7a',font:{size:8}}},
+    }
+  });
+
+  // EV/Revenue HTML bars
+  const evRev=cos.map(c=>({c,val:VAL_MULT[c]})).sort((a,b)=>a.val-b.val);
+  const maxEV=Math.max(...evRev.map(d=>d.val),1);
+  document.getElementById('evRevenueEl').innerHTML=evRev.map(d=>`
+    <div class="hbar-row" onclick="triggerCrossFilter('${d.c}')">
+      <div class="hbar-lbl" style="color:${COL[d.c]}">${d.c.split(' ')[0]}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${(d.val/maxEV*100).toFixed(1)}%;background:${COL[d.c]}">${d.val.toFixed(1)}×</div>
+      </div>
+    </div>`).join('');
+
+  // Market cap bar
+  mkChart('marketCapBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{
+      label:'Market Cap / Valuation ($B)',
+      data:cos.map(c=>VAL25[c]||0),
+      backgroundColor:cos.map(c=>COL[c]),
+      borderRadius:5,borderSkipped:false,
+    }]
+  },{...bOpts('Valuation ($B)'),plugins:{...bOpts().plugins,legend:{display:false}}});
+}
+
+// ─── PAGE 4: SUSTAINABILITY ──────────────────────────────────────────────────
+function renderP4(cos){
+  const scores=cos.map(c=>({c,score:calcSustainability(c)})).sort((a,b)=>b.score-a.score);
+  const winner=scores[0];
+  document.getElementById('sustWinner').textContent=`Winner: ${winner.c.split(' ')[0]} — Score ${winner.score} / 100`;
+
+  // Rank cards
+  document.getElementById('sustainRanks').innerHTML=scores.slice(0,5).map((d,i)=>`
+    <div class="rank-card" style="border-color:${COL[d.c]}" onclick="triggerCrossFilter('${d.c}')">
+      <div class="rank-num">#${i+1}</div>
+      <div class="rank-co" style="color:${COL[d.c]}">${d.c.split(' ')[0]}</div>
+      <div class="rank-score" style="color:${COL[d.c]}">${d.score}/100</div>
+      <div class="rank-factors">
+        <div class="rf">Margin: ${MARGIN_INFO[d.c]?.m||0}%</div>
+        <div class="rf">LTV:CAC: ${LTVCAC[d.c]||'N/A'}</div>
+        <div class="rf">Burn: ${BURN_MULT[d.c]?BURN_MULT[d.c].toFixed(1)+'×':'N/A'}</div>
+        <div class="rf">Ent Mix: ${SEG[d.c]?.e||0}%</div>
+      </div>
+    </div>`).join('');
+
+  // Radar
+  const radarCos=scores.slice(0,5).map(d=>d.c);
+  mkChart('sustRadar','radar',{
+    labels:['Gross Margin','LTV:CAC','Capital Efficiency','YoY Growth','Enterprise Mix'],
+    datasets:radarCos.map(c=>{
+      const m=(MARGIN_INFO[c]?.m||0)/77*100;
+      const ltv=(LTVCAC[c]||0)/30*100;
+      const burn=(BURN_MULT[c])?((3-BURN_MULT[c])/3*100):0;
+      const growth=(GROWTH[c]?.[2]||0)/1400*100;
+      const ent=(SEG[c]?.e||0)/80*100;
+      return{
+        label:c.split(' ')[0],data:[m,ltv,burn,growth,ent],
+        borderColor:COL[c],backgroundColor:ha(COL[c],.08),
+        borderWidth:2,pointBackgroundColor:COL[c],pointRadius:4,
+      };
+    })
+  },{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a6a8a',font:{size:9},boxWidth:9}},tooltip:ttp},
+    scales:{r:{backgroundColor:'#050b14',grid:{color:'#1a2e48'},ticks:{backdropColor:'transparent',color:'#3d5a7a',font:{size:7}},pointLabels:{color:'#7a9ab8',font:{size:9}},min:0,max:100}}
+  });
+
+  // Profit timeline
+  const profitData=[
+    {co:'Meta (Llama)',yr:2025,phase:'Already profitable — $70B profit 2024'},
+    {co:'Google (Gemini)',yr:2024,phase:'Already profitable — $111B profit 2024'},
+    {co:'Anthropic',yr:2027,phase:'Path to profitability — near breakeven 2025'},
+    {co:'OpenAI',yr:2029,phase:'Expected profitability — scale + efficiency'},
+    {co:'xAI (Grok)',yr:2030,phase:'Aggressive growth — profitability later'},
+  ];
+  document.getElementById('profitTimeline').innerHTML=profitData.filter(d=>cos.includes(d.co)).map(d=>`
+    <div class="tl-row" onclick="triggerCrossFilter('${d.co}')">
+      <div class="tl-dot" style="background:${COL[d.co]}"></div>
+      <div class="tl-yr">${d.yr}</div>
+      <div class="tl-co" style="color:${COL[d.co]}">${d.co.split(' ')[0]}</div>
+      <div class="tl-phase">${d.phase}</div>
+    </div>`).join('');
+
+  // Efficiency scatter
+  const effData=cos.filter(c=>BURN_MULT[c]).map(c=>({
+    c,
+    burn:BURN_MULT[c],
+    growth:GROWTH[c]?.[2]||0,
+  }));
+  mkChart('efficiencyScatter','scatter',{
+    datasets:effData.map(d=>({
+      label:d.c.split(' ')[0],
+      data:[{x:3-d.burn,y:d.growth}], // invert burn so higher=better
+      backgroundColor:COL[d.c],
+      pointRadius:10,pointHoverRadius:14,
+    }))
+  },{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a6a8a',font:{size:9},boxWidth:9}},tooltip:ttp},
+    scales:{
+      x:{grid:grd,ticks:tck,title:{display:true,text:'Capital Efficiency (Lower Burn = Better)',color:'#3d5a7a',font:{size:8}}},
+      y:{grid:grd,ticks:tck,title:{display:true,text:'YoY Growth %',color:'#3d5a7a',font:{size:8}}},
+    }
+  });
+}
+
+// ─── PAGE 5: AI MODELS ────────────────────────────────────────────────────────
+function renderP5(cos){
+  const benchArr=Object.entries(BENCHMARKS).map(([name,data])=>({name,...data}));
+  const filtered=benchArr.filter(b=>cos.includes(b.co));
+  
+  const topModel=benchArr.sort((a,b)=>b.overall-a.overall)[0];
+  document.getElementById('modelWinner').textContent=`Smartest Overall: ${topModel.name} — ${topModel.overall} / 100`;
+
+  // Benchmark table
+  const tbl=document.getElementById('benchTable');
+  tbl.innerHTML=`<thead><tr>
+    <th>Model</th><th>Company</th><th>MMLU</th><th>Coding</th><th>Math</th><th>GPQA</th><th>Overall</th>
+  </tr></thead><tbody>${filtered.map(b=>`
+    <tr onclick="triggerCrossFilter('${b.co}')">
+      <td class="model-name" style="color:${COL[b.co]}">${b.name}</td>
+      <td>${b.co.split(' ')[0]}</td>
+      <td class="${b.mmlu>=88?'score-high':b.mmlu>=85?'score-mid':'score-low'}">${b.mmlu.toFixed(1)}</td>
+      <td class="${b.code>=90?'score-high':b.code>=85?'score-mid':'score-low'}">${b.code.toFixed(1)}</td>
+      <td class="${b.math>=76?'score-high':b.math>=70?'score-mid':'score-low'}">${b.math.toFixed(1)}</td>
+      <td class="${b.gpqa>=60?'score-high':b.gpqa>=50?'score-mid':'score-low'}">${b.gpqa.toFixed(1)}</td>
+      <td class="score-high">${b.overall.toFixed(1)}</td>
+    </tr>`).join('')}</tbody>`;
+
+  // Coding bar
+  mkChart('codingBar','bar',{
+    labels:filtered.map(b=>b.name.split(' ').slice(0,2).join(' ')),
+    datasets:[{
+      label:'HumanEval Pass@1',
+      data:filtered.map(b=>b.code),
+      backgroundColor:filtered.map(b=>COL[b.co]),
+      borderRadius:5,borderSkipped:false,
+    }]
+  },{...bOpts('Score'),plugins:{...bOpts().plugins,legend:{display:false}},scales:{...bOpts().scales,y:{...bOpts().scales.y,min:70,max:95}}});
+
+  // Reasoning bar
+  mkChart('reasonBar','bar',{
+    labels:filtered.map(b=>b.name.split(' ').slice(0,2).join(' ')),
+    datasets:[
+      {label:'MATH',data:filtered.map(b=>b.math),backgroundColor:'#00d4aa',borderRadius:4},
+      {label:'GPQA',data:filtered.map(b=>b.gpqa),backgroundColor:'#ffd93d',borderRadius:4},
+    ]
+  },{...bOpts('Score'),scales:{...bOpts().scales,y:{...bOpts().scales.y,min:40,max:90}}});
+
+  // Overall bar
+  mkChart('overallBar','bar',{
+    labels:filtered.map(b=>b.name.split(' ').slice(0,2).join(' ')),
+    datasets:[{
+      label:'Overall Intelligence',
+      data:filtered.map(b=>b.overall),
+      backgroundColor:filtered.map(b=>COL[b.co]),
+      borderRadius:5,borderSkipped:false,
+    }]
+  },{...bOpts('Score'),plugins:{...bOpts().plugins,legend:{display:false}},scales:{...bOpts().scales,y:{...bOpts().scales.y,min:80,max:92}}});
+
+  // Radar
+  const radarCos=cos.slice(0,5);
+  mkChart('radarChart','radar',{
+    labels:['Performance','Cost Effect.','Ease of Use','Data Analysis','Research','Coding'],
+    datasets:radarCos.map(c=>({
+      label:c.split(' ')[0],data:RADAR_V[c],
+      borderColor:COL[c],backgroundColor:ha(COL[c],.08),
+      borderWidth:2,pointBackgroundColor:COL[c],pointRadius:4,
+    }))
+  },{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a6a8a',font:{size:9},boxWidth:9}},tooltip:ttp},
+    scales:{r:{backgroundColor:'#050b14',grid:{color:'#1a2e48'},ticks:{backdropColor:'transparent',color:'#3d5a7a',font:{size:7}},pointLabels:{color:'#7a9ab8',font:{size:9}},min:0,max:10}}
+  });
+}
+
+// ─── PAGE 6 ──────────────────────────────────────────────────────────────────
+function renderP6(cos){
+  document.getElementById('projCards').innerHTML=cos.map(c=>{
+    const d=PROJ_INFO[c];
+    return `<div class="mcard" style="border-top-color:${COL[c]}" onclick="triggerCrossFilter('${c}')">
+      <div class="mcard-l">${c.split(' ')[0]} 2030</div>
+      <div class="mcard-v" style="color:${COL[c]}">${d.base}</div>
+      <div class="mcard-s">Bull: ${d.bull} | Profit ${d.yr}</div>
+    </div>`;
+  }).join('');
+
+  mkChart('projLine','line',{
+    labels:['2025','2026','2028','2030'],
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],data:PROJ[c],tension:.4,fill:true,
+      borderColor:COL[c],backgroundColor:ha(COL[c],.06),
+      borderWidth:2.5,pointRadius:5,pointBackgroundColor:COL[c],pointHoverRadius:8,
+      borderDash:c==='xAI (Grok)'?[6,3]:[],
+    }))
+  },bOpts('Revenue ($B)'));
+
+  mkChart('mktArea','line',{
+    labels:['2023','2024','2025','2026','2028','2030'],
+    datasets:[{label:'Total AI Market $B',data:[10,28,70,120,250,500],tension:.4,fill:true,
+      borderColor:'#4ecdc4',backgroundColor:ha('#4ecdc4',.12),borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#4ecdc4'}]
+  },{...bOpts('Market Size ($B)'),plugins:{...bOpts().plugins,legend:{display:false}}});
+
+  mkChart('scenarioBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[
+      {label:'🟢 Bull',data:cos.map(c=>BULL[c]||0),backgroundColor:'#00d4aa44',borderRadius:4,borderColor:'#00d4aa',borderWidth:1},
+      {label:'🔵 Base',data:cos.map(c=>BASE[c]||0),backgroundColor:'#4ecdc4',borderRadius:4},
+      {label:'🔴 Bear',data:cos.map(c=>BEAR[c]||0),backgroundColor:'#ff6b6b55',borderRadius:4},
+    ]
+  },bOpts('2030 ARR ($B)'));
+
+  document.getElementById('collabGrid').innerHTML=[
+    {n:'OpenAI + Microsoft',rev:'$150B',share:'55%',prob:70,col:'#00d4aa',co:'OpenAI'},
+    {n:'Anthropic + Google + AWS',rev:'$80B',share:'30%',prob:50,col:'#ff6b6b',co:'Anthropic'},
+    {n:'Meta Llama Open Ecosystem',rev:'$35B',share:'15%',prob:90,col:'#a78bfa',co:'Meta (Llama)'},
+    {n:'xAI + Tesla',rev:'$25B',share:'10%',prob:60,col:'#ffd93d',co:'xAI (Grok)'},
+  ].map(d=>`<div class="ccard" style="border-left:3px solid ${d.col};cursor:pointer" onclick="triggerCrossFilter('${d.co}')">
+    <div class="ccard-t" style="color:${d.col}">${d.n}</div>
+    <div class="ccard-s"><span>Rev 2026: ${d.rev}</span><span>Share: ${d.share}</span></div>
+    <div class="ccard-p">
+      <span style="font-size:7px;color:var(--muted);width:52px">Prob ${d.prob}%</span>
+      <div class="cbar"><div class="cfill" style="width:${d.prob}%;background:${d.col}"></div></div>
+    </div>
+  </div>`).join('');
+}
+
+function showTab(n){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===n));
+}
+
+renderAll();
+</script>
+</body>
+</html>
