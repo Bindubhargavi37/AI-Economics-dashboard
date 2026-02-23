@@ -262,7 +262,7 @@ with tab1:
         marker=dict(size=6, color=COLORS[c]),
     )
 )
-           
+                                    )   
         apply_layout(fig, h=340)
         fig.update_layout(yaxis_title="ARR ($B)")
         st.plotly_chart(fig, use_container_width=True)
