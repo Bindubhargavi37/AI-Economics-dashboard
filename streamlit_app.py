@@ -243,26 +243,29 @@ with tab1:
     with m3: st.metric("Largest User Base","800M WAU","OpenAI ChatGPT")
     with m4: st.metric("Total CapEx 23-25","$538B","Industry infra")
 
-    col1, col2 = st.columns([2,1])
-    with col1:
-        st.markdown("<div class='section-title'>ARR GROWTH TRAJECTORY 2022–2025 ($B)</div>",unsafe_allow_html=True)
-        fig = go.Figure()
-        for c in COMPANIES:
-            d = fin[fin.company==c].sort_values("year")
-            fig.add_trace(go.Scatter(x=d.year, y=d.arr, name=c.split(" ")[0],
-                mode="lines+markers", line=dict(color=COLORS[c],width=2.5),
-                marker=dict(size=6,color=COLORS[c]),
-               fig.add_trace(
-    go.Scatter(
-        x=d.year,
-        y=d.arr,
-        name=c.split(" ")[0],
-        mode="lines+markers",
-        line=dict(color=COLORS[c], width=2.5),
-        marker=dict(size=6, color=COLORS[c]),
+    col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.markdown(
+        "<div class='section-title'>ARR GROWTH TRAJECTORY 2022–2025 ($B)</div>",
+        unsafe_allow_html=True,
     )
-)
-                                    ) )  
+
+    fig = go.Figure()
+
+    for c in COMPANIES:
+        d = fin[fin.company == c].sort_values("year")
+
+        fig.add_trace(
+            go.Scatter(
+                x=d.year,
+                y=d.arr,
+                name=c.split(" ")[0],
+                mode="lines+markers",
+                line=dict(color=COLORS[c], width=2.5),
+                marker=dict(size=6, color=COLORS[c]),
+            )
+        )
         apply_layout(fig, h=340)
         fig.update_layout(yaxis_title="ARR ($B)")
         st.plotly_chart(fig, use_container_width=True)
