@@ -252,8 +252,17 @@ with tab1:
             fig.add_trace(go.Scatter(x=d.year, y=d.arr, name=c.split(" ")[0],
                 mode="lines+markers", line=dict(color=COLORS[c],width=2.5),
                 marker=dict(size=6,color=COLORS[c]),
-                fill="tozeroy", fillcolor=COLORS[c].replace("#","rgba(")+"22)".replace("rgba(","rgba(") if False else "none",
-            ))
+               fig.add_trace(
+    go.Scatter(
+        x=d.year,
+        y=d.arr,
+        name=c.split(" ")[0],
+        mode="lines+markers",
+        line=dict(color=COLORS[c], width=2.5),
+        marker=dict(size=6, color=COLORS[c]),
+    )
+)
+           
         apply_layout(fig, h=340)
         fig.update_layout(yaxis_title="ARR ($B)")
         st.plotly_chart(fig, use_container_width=True)
