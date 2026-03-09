@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DA-AI Intelligence Dashboard - Light Edition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* Light Professional Theme */
+  --bg:#f8fafc;
+  --bg2:#ffffff;
+  --bg3:#f1f5f9;
+  --bg4:#e2e8f0;
+  --border:#cbd5e1;
+  --text:#1e293b;
+  --muted:#64748b;
+  --accent:#0ea5e9;
+  
+  /* Company Colors */
+  --openai:#10b981;
+  --anthropic:#ef4444;
+  --google:#06b6d4;
+  --meta:#8b5cf6;
+  --xai:#f59e0b;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  box-shadow:0 4px 12px rgba(14,165,233,0.2);
+  padding:24px 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.hdr-title{
+  font-family:'Poppins',sans-serif;
+  font-size:28px;
+  font-weight:800;
+  color:#ffffff;
+  letter-spacing:0.5px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+.hdr-sub{
+  font-size:11px;
+  letter-spacing:2px;
+  color:rgba(255,255,255,0.9);
+  text-transform:uppercase;
+  margin-top:4px;
+  font-weight:500;
+}
+.hdr-kpis{display:flex;gap:12px;flex-wrap:wrap}
+.hkpi{
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:12px;
+  padding:8px 16px;
+  text-align:center;
+}
+.hkpi-l{
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:rgba(255,255,255,0.9);
+  text-transform:uppercase;
+  font-weight:600;
+}
+.hkpi-v{
+  font-size:16px;
+  font-weight:800;
+  margin-top:2px;
+  color:#ffffff;
+}
+
+/* FILTER TOOLBAR */
+.toolbar{
+  background:#ffffff;
+  border-bottom:2px solid var(--border);
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  gap:0;
+  flex-wrap:wrap;
+  position:sticky;
+  top:0;
+  z-index:200;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.toolbar-section{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:14px 20px 14px 0;
+  border-right:2px solid var(--bg3);
+}
+.toolbar-section:last-child{border-right:none;margin-left:auto}
+.tbar-label{
+  font-size:10px;
+  letter-spacing:1.5px;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-right:8px;
+  white-space:nowrap;
+  font-weight:600;
+}
+
+/* COMPANY CHIPS */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:var(--bg2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+  white-space:nowrap;
+  user-select:none;
+}
+.chip:hover{
+  border-color:var(--accent);
+  background:var(--bg3);
+  transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(14,165,233,0.15);
+}
+.chip.selected{
+  color:#ffffff !important;
+  border-color:transparent;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+.chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.chip-all{letter-spacing:1px}
+.chip-all.selected{background:var(--accent);color:#ffffff !important}
+
+/* YEAR FILTER */
+.yr-chip{
+  padding:6px 14px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:var(--bg2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+}
+.yr-chip:hover{
+  border-color:var(--accent);
+  background:var(--bg3);
+  transform:translateY(-1px);
+}
+.yr-chip.selected{
+  background:var(--accent);
+  color:#ffffff;
+  border-color:var(--accent);
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(14,165,233,0.3);
+}
+
+/* FILTER STATUS */
+.fstatus{
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:0.5px;
+  padding-left:16px;
+  font-weight:500;
+}
+.fstatus span{color:var(--accent);font-weight:700}
+
+/* TABS */
+.tabs{
+  display:flex;
+  gap:0;
+  background:var(--bg2);
+  border-bottom:2px solid var(--border);
+  padding:0 28px;
+  overflow-x:auto;
+  box-shadow:0 2px 4px rgba(0,0,0,0.03);
+}
+.tab{
+  padding:14px 24px;
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  font-family:'Inter',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:all .2s;
+  white-space:nowrap;
+}
+.tab:hover{
+  color:var(--accent);
+  background:var(--bg3);
+}
+.tab.active{
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+  font-weight:700;
+  background:var(--bg3);
+}
+
+/* PAGES */
+.page{
+  display:none;
+  padding:28px 32px 50px;
+  animation:fadeIn .3s ease;
+}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPI ROW */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:14px;
+  margin-bottom:20px;
+}
+.kpi{
+  background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:18px 16px;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  transition:all .25s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.kpi:hover{
+  border-color:var(--accent);
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(14,165,233,0.2);
+}
+.kpi::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+  border-radius:12px 12px 0 0;
+}
+.kpi-label{
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-bottom:8px;
+  font-weight:600;
+}
+.kpi-val{
+  font-size:26px;
+  font-weight:800;
+  line-height:1;
+  margin-bottom:4px;
+  font-family:'Poppins',sans-serif;
+}
+.kpi-sub{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
+  font-weight:500;
+}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+
+/* CHART CARDS */
+.card{
+  background:#ffffff;
+  border:2px solid var(--border);
+  border-radius:16px;
+  padding:20px 24px;
+  transition:all .25s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.card:hover{
+  border-color:var(--accent);
+  box-shadow:0 8px 24px rgba(14,165,233,0.15);
+  transform:translateY(-2px);
+}
+.ctitle{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--text);
+  text-transform:uppercase;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:'Poppins',sans-serif;
+}
+.ctitle::before{
+  content:'';
+  width:4px;
+  height:20px;
+  background:linear-gradient(180deg, var(--accent) 0%, #0284c7 100%);
+  border-radius:2px;
+  flex-shrink:0;
+}
+
+/* CUSTOM BAR */
+.hbar-wrap{display:flex;flex-direction:column;gap:12px}
+.hbar-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  cursor:pointer;
+  padding:8px 10px;
+  border-radius:10px;
+  transition:all .2s;
+}
+.hbar-row:hover{
+  background:var(--bg3);
+  transform:translateX(4px);
+}
+.hbar-lbl{
+  font-size:12px;
+  width:100px;
+  flex-shrink:0;
+  color:var(--text);
+  font-weight:600;
+}
+.hbar-track{
+  flex:1;
+  background:var(--bg3);
+  border-radius:6px;
+  height:28px;
+  overflow:hidden;
+  cursor:pointer;
+  border:1px solid var(--border);
+}
+.hbar-fill{
+  height:100%;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:10px;
+  font-size:11px;
+  font-weight:700;
+  color:#ffffff;
+  transition:width .6s ease;
+  box-shadow:inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+/* COMPARISON TABLE */
+.comp-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:12px;
+  margin-top:12px;
+}
+.comp-table thead th{
+  background:linear-gradient(135deg, var(--accent) 0%, #0284c7 100%);
+  color:#ffffff;
+  padding:12px 16px;
+  text-align:left;
+  font-weight:700;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  border:none;
+}
+.comp-table thead th:first-child{border-radius:10px 0 0 0}
+.comp-table thead th:last-child{border-radius:0 10px 0 0}
+.comp-table tbody tr{
+  background:#ffffff;
+  transition:all .2s;
+  cursor:pointer;
+}
+.comp-table tbody tr:hover{
+  background:var(--bg3);
+  transform:scale(1.01);
+}
+.comp-table tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+}
+.comp-table tbody tr:last-child td{border-bottom:none}
+.comp-table tbody tr:last-child td:first-child{border-radius:0 0 0 10px}
+.comp-table tbody tr:last-child td:last-child{border-radius:0 0 10px 0}
+.comp-rank{
+  font-weight:800;
+  font-size:16px;
+  font-family:'Poppins',sans-serif;
+}
+.comp-winner{
+  background:linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color:#ffffff !important;
+  font-weight:700;
+}
+.comp-score{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:6px;
+  font-weight:700;
+  font-size:11px;
+}
+.score-high{background:#dcfce7;color:#16a34a}
+.score-mid{background:#fef3c7;color:#d97706}
+.score-low{background:#fee2e2;color:#dc2626}
+
+/* WINNER CARD */
+.winner-card{
+  background:linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius:16px;
+  padding:24px 28px;
+  margin-bottom:20px;
+  color:#ffffff;
+  box-shadow:0 8px 24px rgba(16,185,129,0.3);
+  position:relative;
+  overflow:hidden;
+}
+.winner-card::before{
+  content:'🏆';
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:60px;
+  opacity:0.15;
+}
+.winner-tag{
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:6px;
+  opacity:0.9;
+}
+.winner-name{
+  font-size:24px;
+  font-weight:800;
+  font-family:'Poppins',sans-serif;
+  margin-bottom:6px;
+}
+.winner-desc{
+  font-size:13px;
+  line-height:1.6;
+  opacity:0.95;
+  font-weight:500;
+}
+
+/* RADAR COMPARISON */
+.radar-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:16px;
+}
+
+/* RESPONSIVE */
+@media(max-width:1200px){
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .g2,.g21{grid-template-columns:1fr}
+  .radar-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:1fr}
+}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg3);border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#0284c7}
+
+canvas{max-width:100%}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">🤖 DA-AI INTELLIGENCE DASHBOARD</div>
+    <div class="hdr-sub">OpenAI · Anthropic · Google Gemini · Meta Llama · xAI Grok · 2022–2030</div>
+  </div>
+  <div class="hdr-kpis">
+    <div class="hkpi"><div class="hkpi-l">Market 2025</div><div class="hkpi-v">$70B</div></div>
+    <div class="hkpi"><div class="hkpi-l">Market 2030</div><div class="hkpi-v">$500B</div></div>
+    <div class="hkpi"><div class="hkpi-l">Best Margin</div><div class="hkpi-v">Anth 77%</div></div>
+    <div class="hkpi"><div class="hkpi-l">Best LTV:CAC</div><div class="hkpi-v">30:1</div></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-section">
+    <span class="tbar-label">Company</span>
+    <div class="chip chip-all selected" id="c-all" onclick="toggleCompany('all')">All Companies</div>
+    <div class="chip" id="c-OpenAI" onclick="toggleCompany('OpenAI')"><span class="dot" style="background:#10b981"></span>OpenAI</div>
+    <div class="chip" id="c-Anthropic" onclick="toggleCompany('Anthropic')"><span class="dot" style="background:#ef4444"></span>Anthropic</div>
+    <div class="chip" id="c-Google (Gemini)" onclick="toggleCompany('Google (Gemini)')"><span class="dot" style="background:#06b6d4"></span>Google</div>
+    <div class="chip" id="c-Meta (Llama)" onclick="toggleCompany('Meta (Llama)')"><span class="dot" style="background:#8b5cf6"></span>Meta</div>
+    <div class="chip" id="c-xAI (Grok)" onclick="toggleCompany('xAI (Grok)')"><span class="dot" style="background:#f59e0b"></span>xAI</div>
+  </div>
+  <div class="toolbar-section">
+    <span class="tbar-label">Year</span>
+    <div class="yr-chip selected" id="y-all" onclick="toggleYear('all')">All Years</div>
+    <div class="yr-chip" id="y-2022" onclick="toggleYear('2022')">2022</div>
+    <div class="yr-chip" id="y-2023" onclick="toggleYear('2023')">2023</div>
+    <div class="yr-chip" id="y-2024" onclick="toggleYear('2024')">2024</div>
+    <div class="yr-chip" id="y-2025" onclick="toggleYear('2025')">2025</div>
+  </div>
+  <div class="toolbar-section">
+    <div class="fstatus" id="fstatus">Showing: <span>All Companies · All Years</span></div>
+    <div class="chip" style="margin-left:12px;font-size:10px;padding:4px 10px" onclick="resetAll()">✕ Reset</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab(0)">🏆 Overview</button>
+  <button class="tab" onclick="showTab(1)">📈 Revenue</button>
+  <button class="tab" onclick="showTab(2)">💰 Profitability</button>
+  <button class="tab" onclick="showTab(3)">⚖️ Comparative Analysis</button>
+  <button class="tab" onclick="showTab(4)">🎯 Rankings & Scores</button>
+  <button class="tab" onclick="showTab(5)">🤖 AI Models</button>
+  <button class="tab" onclick="showTab(6)">🚀 Future Growth</button>
+</div>
+
+<!-- PAGE 0: OVERVIEW -->
+<div class="page active" id="page-0">
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="g21">
+    <div class="card"><div class="ctitle">📊 ARR Growth 2022–2025 ($B)</div><div style="height:300px"><canvas id="arrLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">🍩 2025 Market Share %</div><div style="height:300px"><canvas id="shareDonut"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">📊 2025 ARR Ranking ($B)</div><div class="hbar-wrap" id="arrBarsEl"></div></div>
+    <div class="card"><div class="ctitle">👥 Monthly Active Users 2025 (M)</div><div style="height:240px"><canvas id="mauBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 1: REVENUE -->
+<div class="page" id="page-1">
+  <div class="g2">
+    <div class="card"><div class="ctitle">📈 ARR Trend 2022–2025 ($B)</div><div style="height:300px"><canvas id="arrLine2"></canvas></div></div>
+    <div class="card"><div class="ctitle">💼 2025 Valuation vs ARR ($B)</div><div style="height:300px"><canvas id="valBar"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">📊 YoY Revenue Growth %</div><div style="height:280px"><canvas id="growthBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">💰 Revenue Mix — Consumer / Enterprise / API</div><div id="segStack" style="margin-top:12px"></div></div>
+  </div>
+</div>
+
+<!-- PAGE 2: PROFITABILITY -->
+<div class="page" id="page-2">
+  <div class="g2">
+    <div class="card"><div class="ctitle">📊 Gross Margin % Trend 2023–2025</div><div style="height:300px"><canvas id="marginLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">🎯 LTV:CAC Ratio 2025 — Target 3:1</div><div style="height:300px"><canvas id="ltvcacBar"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ctitle">💵 ARPU ($) — Avg Revenue Per User</div><div style="height:260px"><canvas id="arpuBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">🤝 Collaboration Synergy ($B)</div><div style="height:260px"><canvas id="synergyBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 3: COMPARATIVE ANALYSIS -->
+<div class="page" id="page-3">
+  <div class="winner-card">
+    <div class="winner-tag">🏆 COMPARATIVE ANALYSIS WINNER</div>
+    <div class="winner-name" id="compWinner">Anthropic — Overall Best Positioned</div>
+    <div class="winner-desc" id="compDesc">Leads in 4 of 6 key metrics: Profitability (77% margin), Efficiency (30:1 LTV:CAC), Growth Consistency (488% YoY), and Enterprise Focus (80% revenue mix). Scores 86/100 in weighted analysis.</div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">📊 Multi-Dimensional Company Comparison</div>
+    <table class="comp-table" id="compTable"></table>
+  </div>
+
+  <div class="g2" style="margin-top:20px">
+    <div class="card">
+      <div class="ctitle">⚖️ Head-to-Head: Anthropic vs OpenAI</div>
+      <div style="height:320px"><canvas id="headToHeadRadar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">📈 Efficiency vs Growth Matrix</div>
+      <div style="height:320px"><canvas id="efficiencyScatter"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: RANKINGS & SCORES -->
+<div class="page" id="page-4">
+  <div class="winner-card">
+    <div class="winner-tag">🎯 SUSTAINABILITY RANKING CHAMPION</div>
+    <div class="winner-name">Anthropic — Score 91/100</div>
+    <div class="winner-desc">Best-in-class composite score across 5 factors: Gross Margin (25pts), LTV:CAC (25pts), Burn Multiple (20pts), YoY Growth (15pts), Enterprise Mix (15pts). Most sustainable path to long-term revenue growth.</div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">🏆 Category Rankings — Who Wins What?</div>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Winner</th>
+          <th>Value</th>
+          <th>Runner-Up</th>
+          <th>Advantage</th>
+        </tr>
+      </thead>
+      <tbody id="rankingsTable"></tbody>
+    </table>
+  </div>
+
+  <div class="g2" style="margin-top:20px">
+    <div class="card">
+      <div class="ctitle">📊 Weighted Sustainability Score</div>
+      <div style="height:300px"><canvas id="sustScoreBar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">⭐ Overall Performance Heatmap</div>
+      <div id="heatmapGrid" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: AI MODELS -->
+<div class="page" id="page-5">
+  <div class="winner-card" style="background:linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+    <div class="winner-tag">🤖 AI MODEL INTELLIGENCE CHAMPION</div>
+    <div class="winner-name">Claude 3.5 Sonnet — 88.7/100</div>
+    <div class="winner-desc">Anthropic's flagship model leads overall intelligence benchmarks. Best coding performance (92.0), strongest reasoning (78.3 MATH), highest overall score. GPT-4o close second at 87.8.</div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">🏆 AI Model Benchmark Scores</div>
+    <table class="comp-table">
+      <thead>
+        <tr><th>Model</th><th>Company</th><th>MMLU</th><th>Coding</th><th>Math</th><th>Overall</th></tr>
+      </thead>
+      <tbody id="benchTable"></tbody>
+    </table>
+  </div>
+
+  <div class="g2" style="margin-top:20px">
+    <div class="card"><div class="ctitle">💻 Coding Performance (HumanEval)</div><div style="height:280px"><canvas id="codingBar"></canvas></div></div>
+    <div class="card"><div class="ctitle">🧠 Overall Intelligence Ranking</div><div style="height:280px"><canvas id="overallBar"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 6: FUTURE GROWTH -->
+<div class="page" id="page-6">
+  <div class="g21">
+    <div class="card"><div class="ctitle">🚀 Revenue Projection 2025→2030 Base Case ($B)</div><div style="height:320px"><canvas id="projLine"></canvas></div></div>
+    <div class="card"><div class="ctitle">🌍 Total AI Market Size ($B)</div><div style="height:320px"><canvas id="mktArea"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ctitle">📊 2030 Scenarios — Bull / Base / Bear ($B)</div><div style="height:300px"><canvas id="scenarioBar"></canvas></div></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════════════════
+const ALL_COS=['OpenAI','Anthropic','Google (Gemini)','Meta (Llama)','xAI (Grok)'];
+const COL={
+  'OpenAI':'#10b981',
+  'Anthropic':'#ef4444',
+  'Google (Gemini)':'#06b6d4',
+  'Meta (Llama)':'#8b5cf6',
+  'xAI (Grok)':'#f59e0b'
+};
+
+const ARR={
+  'OpenAI':{'2022':0.028,'2023':2.0,'2024':3.7,'2025':20.0},
+  'Anthropic':{'2022':0.01,'2023':0.1,'2024':0.85,'2025':9.0},
+  'xAI (Grok)':{'2024':0.1,'2025':3.2},
+  'Google (Gemini)':{'2023':2.0,'2024':8.0,'2025':25.0},
+  'Meta (Llama)':{'2023':1.0,'2024':5.0,'2025':15.0},
+};
+
+const MARGIN={
+  'OpenAI':{'2023':15,'2024':20,'2025':50},
+  'Anthropic':{'2023':40,'2024':55,'2025':77},
+  'xAI (Grok)':{'2024':15,'2025':25},
+  'Google (Gemini)':{'2023':45,'2024':50,'2025':55},
+  'Meta (Llama)':{'2023':80,'2024':81,'2025':82},
+};
+
+const MAU={'OpenAI':600,'Google (Gemini)':450,'Meta (Llama)':600,'xAI (Grok)':64,'Anthropic':30};
+const SHARE={'OpenAI':60.6,'Anthropic':12,'xAI (Grok)':3.5,'Google (Gemini)':13.4,'Meta (Llama)':10};
+const ARR25={'OpenAI':20,'Anthropic':9,'xAI (Grok)':3.2,'Google (Gemini)':25,'Meta (Llama)':15};
+const VAL25={'OpenAI':300,'Anthropic':183,'xAI (Grok)':230,'Google (Gemini)':2000,'Meta (Llama)':1400};
+const GROWTH={'OpenAI':[5614,131,251],'Anthropic':[900,750,488],'xAI (Grok)':[null,null,1400],'Google (Gemini)':[null,14,9],'Meta (Llama)':[null,41,15]};
+const LTVCAC={'Anthropic':30.0,'OpenAI':22.3,'xAI (Grok)':10.5};
+const ARPU_D={'Anthropic':{'2023':200,'2024':85,'2025':166.7},'OpenAI':{'2023':32,'2024':24.7,'2025':21.7},'xAI (Grok)':{'2024':20,'2025':23.4}};
+const PROJ={'OpenAI':[20,29.4,75,125],'Anthropic':[9,20,70,100],'xAI (Grok)':[3.2,5,14,25],'Google (Gemini)':[25,50,120,200],'Meta (Llama)':[15,25,60,100]};
+const BULL={'OpenAI':200,'Anthropic':150,'Google (Gemini)':300,'xAI (Grok)':50,'Meta (Llama)':150};
+const BASE={'OpenAI':125,'Anthropic':100,'Google (Gemini)':200,'xAI (Grok)':25,'Meta (Llama)':100};
+const BEAR={'OpenAI':80,'Anthropic':60,'Google (Gemini)':130,'xAI (Grok)':15,'Meta (Llama)':60};
+const VAL_MULT={'OpenAI':15.0,'Anthropic':20.3,'xAI (Grok)':71.9,'Google (Gemini)':80.0,'Meta (Llama)':93.3};
+const SEG={'OpenAI':{c:60,e:35,a:5},'Anthropic':{c:20,e:80,a:0},'Google (Gemini)':{c:30,e:40,a:30},'Meta (Llama)':{c:0,e:30,a:70},'xAI (Grok)':{c:70,e:20,a:10}};
+
+const BENCHMARKS={
+  'Claude 3.5 Sonnet':{'company':'Anthropic','mmlu':88.7,'code':92.0,'math':78.3,'overall':88.7},
+  'GPT-4o':{'company':'OpenAI','mmlu':88.0,'code':90.2,'math':76.6,'overall':87.8},
+  'Gemini 2.0 Flash':{'company':'Google (Gemini)','mmlu':86.9,'code':88.3,'math':74.0,'overall':85.6},
+  'Grok 2':{'company':'xAI (Grok)','mmlu':87.5,'code':88.0,'math':76.1,'overall':84.9},
+  'Llama 4 70B':{'company':'Meta (Llama)','mmlu':86.0,'code':84.2,'math':68.0,'overall':82.3},
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════════
+let selCompanies=new Set();
+let selYear='all';
+const charts={};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CHART DEFAULTS - LIGHT THEME
+// ══════════════════════════════════════════════════════════════════════════════
+Chart.defaults.color='#64748b';
+Chart.defaults.borderColor='#e2e8f0';
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.font.size=11;
+
+const ttp={
+  backgroundColor:'#ffffff',
+  borderColor:'#cbd5e1',
+  borderWidth:2,
+  titleColor:'#1e293b',
+  bodyColor:'#1e293b',
+  padding:12,
+  titleFont:{size:12,weight:'bold'},
+  bodyFont:{size:11},
+  displayColors:true,
+  boxPadding:6
+};
+
+function bOpts(yL=''){
+  return{
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{
+        labels:{
+          color:'#64748b',
+          font:{size:11,weight:'600'},
+          boxWidth:12,
+          padding:12,
+          usePointStyle:true
+        }
+      },
+      tooltip:{
+        ...ttp,
+        callbacks:{
+          title:function(ctx){return ctx[0].label},
+          label:function(ctx){
+            let label=ctx.dataset.label||'';
+            if(label)label+=': ';
+            label+=typeof ctx.parsed.y==='number'?ctx.parsed.y.toFixed(2):ctx.parsed.y;
+            return label;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{
+        grid:{color:'#f1f5f9',lineWidth:1},
+        ticks:{color:'#64748b',font:{size:11,weight:'500'}}
+      },
+      y:{
+        grid:{color:'#f1f5f9',lineWidth:1},
+        ticks:{color:'#64748b',font:{size:11,weight:'500'}},
+        title:{display:!!yL,text:yL,color:'#64748b',font:{size:11,weight:'600'}}
+      }
+    }
+  };
+}
+
+function mkChart(id,type,data,opts){
+  if(charts[id])charts[id].destroy();
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  charts[id]=new Chart(ctx,{type,data,options:opts});
+  ctx.onclick=(e)=>{
+    const pts=charts[id].getElementsAtEventForMode(e,'nearest',{intersect:true},true);
+    if(pts.length){
+      const idx=pts[0].index;
+      const lbl=charts[id].data.labels?.[idx];
+      const ds=charts[id].data.datasets?.[pts[0].datasetIndex];
+      const candidate=findCompany(lbl)||findCompany(ds?.label);
+      if(candidate)triggerCrossFilter(candidate);
+    }
+  };
+}
+
+function findCompany(str){
+  if(!str)return null;
+  for(const c of ALL_COS){
+    const short=c.split(' ')[0];
+    if(str===c||str===short||str.includes(short))return c;
+  }
+  return null;
+}
+
+function getCos(){return selCompanies.size===0?ALL_COS:ALL_COS.filter(c=>selCompanies.has(c));}
+function getARRVal(co,yr){const v=ARR[co]?.[yr];return(v!==undefined)?v:null;}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FILTERING
+// ══════════════════════════════════════════════════════════════════════════════
+function triggerCrossFilter(company){
+  if(selCompanies.size===1&&selCompanies.has(company)){
+    selCompanies.clear();
+  }else{
+    selCompanies.clear();
+    selCompanies.add(company);
+  }
+  syncChipUI();
+  renderAll();
+}
+
+function toggleCompany(co){
+  if(co==='all'){
+    selCompanies.clear();
+  }else{
+    if(selCompanies.has(co)){
+      selCompanies.delete(co);
+    }else{
+      selCompanies.clear();
+      selCompanies.add(co);
+    }
+  }
+  syncChipUI();
+  renderAll();
+}
+
+function toggleYear(yr){
+  selYear=(selYear===yr)?'all':yr;
+  document.querySelectorAll('.yr-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById(yr==='all'?'y-all':`y-${yr}`).classList.add('selected');
+  renderAll();
+}
+
+function resetAll(){
+  selCompanies.clear();
+  selYear='all';
+  document.querySelectorAll('.yr-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('y-all').classList.add('selected');
+  syncChipUI();
+  renderAll();
+}
+
+function syncChipUI(){
+  document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('selected');c.style.background='';c.style.color='';c.style.borderColor='';});
+  if(selCompanies.size===0){
+    document.getElementById('c-all').classList.add('selected');
+  }else{
+    selCompanies.forEach(co=>{
+      const btn=document.getElementById(`c-${co}`);
+      if(btn){btn.classList.add('selected');btn.style.background=COL[co];btn.style.color='#fff';btn.style.borderColor=COL[co];}
+    });
+  }
+  const cos=getCos();
+  const coStr=cos.length===ALL_COS.length?'All Companies':cos.map(c=>c.split(' ')[0]).join(', ');
+  const yrStr=selYear==='all'?'All Years':selYear;
+  document.getElementById('fstatus').innerHTML=`Showing: <span>${coStr} · ${yrStr}</span>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CALCULATIONS
+// ══════════════════════════════════════════════════════════════════════════════
+function calcKPIs(cos){
+  const totalARR=cos.reduce((s,c)=>s+(ARR25[c]||0),0);
+  const avgMargin=cos.reduce((s,c)=>s+(MARGIN[c]?.['2025']||0),0)/cos.length;
+  const totalMAU=cos.reduce((s,c)=>s+(MAU[c]||0),0);
+  const totalShare=cos.reduce((s,c)=>s+(SHARE[c]||0),0);
+  const bestLTVCo=cos.filter(c=>LTVCAC[c]).sort((a,b)=>LTVCAC[b]-LTVCAC[a])[0];
+  const bestLTV=bestLTVCo?LTVCAC[bestLTVCo]:null;
+  const totalVal=cos.reduce((s,c)=>s+(VAL25[c]||0),0);
+
+  return[
+    {label:'Total ARR 2025',val:`$${totalARR.toFixed(1)}B`,sub:`${cos.length} companies`,col:cos.length===1?COL[cos[0]]:'#0ea5e9'},
+    {label:'Avg Gross Margin',val:`${avgMargin.toFixed(0)}%`,sub:'2025 average',col:'#06b6d4'},
+    {label:'Total MAU 2025',val:`${totalMAU}M`,sub:'Monthly Active Users',col:'#8b5cf6'},
+    {label:'Market Share',val:`${totalShare.toFixed(1)}%`,sub:'2025 combined',col:'#f59e0b'},
+    {label:'Best LTV:CAC',val:bestLTV?`${bestLTV}:1`:'N/A',sub:bestLTVCo?bestLTVCo.split(' ')[0]:'',col:'#ef4444'},
+    {label:'Total Valuation',val:`$${(totalVal/1000).toFixed(1)}T`,sub:'Combined 2025',col:'#10b981'},
+  ];
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAll(){
+  const cos=getCos();
+  renderKPIs(cos);
+  renderP0(cos);
+  renderP1(cos);
+  renderP2(cos);
+  renderP3Comparative(cos);
+  renderP4Rankings(cos);
+  renderP5(cos);
+  renderP6(cos);
+}
+
+function renderKPIs(cos){
+  const kpis=calcKPIs(cos);
+  document.getElementById('kpi-row').innerHTML=kpis.map(k=>`
+    <div class="kpi" style="border-top:4px solid ${k.col}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 0: OVERVIEW
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP0(cos){
+  const years=['2022','2023','2024','2025'];
+  const filtYears=selYear==='all'?years:years.filter(y=>y===selYear);
+
+  mkChart('arrLine','line',{
+    labels:filtYears,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:filtYears.map(y=>getARRVal(c,y)),
+      borderColor:COL[c],
+      backgroundColor:COL[c]+'20',
+      borderWidth:3,
+      pointRadius:6,
+      pointBackgroundColor:COL[c],
+      pointBorderColor:'#fff',
+      pointBorderWidth:2,
+      pointHoverRadius:8,
+      tension:0.4,
+      fill:true,
+      spanGaps:true
+    }))
+  },bOpts('ARR ($B)'));
+
+  mkChart('shareDonut','doughnut',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{
+      data:cos.map(c=>SHARE[c]||0),
+      backgroundColor:cos.map(c=>COL[c]),
+      borderColor:'#ffffff',
+      borderWidth:3,
+      hoverOffset:15
+    }]
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    cutout:'65%',
+    plugins:{
+      legend:{position:'right',labels:{color:'#64748b',font:{size:11,weight:'600'},boxWidth:12,padding:10,usePointStyle:true}},
+      tooltip:{...ttp,callbacks:{label:c=>`${c.label}: ${c.raw.toFixed(1)}%`}}
+    }
+  });
+
+  const sorted=[...cos].sort((a,b)=>(ARR25[b]||0)-(ARR25[a]||0));
+  const maxV=Math.max(...sorted.map(c=>ARR25[c]||0),1);
+  document.getElementById('arrBarsEl').innerHTML=sorted.map(c=>`
+    <div class="hbar-row" onclick="triggerCrossFilter('${c}')">
+      <div class="hbar-lbl" style="color:${COL[c]}">${c.split(' ')[0]}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${((ARR25[c]||0)/maxV*100).toFixed(1)}%;background:${COL[c]}">$${ARR25[c]}B</div>
+      </div>
+    </div>`).join('');
+
+  mkChart('mauBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[{
+      label:'MAU (M)',
+      data:cos.map(c=>MAU[c]||0),
+      backgroundColor:cos.map(c=>COL[c]),
+      borderRadius:8,
+      borderSkipped:false
+    }]
+  },{...bOpts('MAU (M)'),plugins:{...bOpts().plugins,legend:{display:false}}});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 1: REVENUE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP1(cos){
+  const years=['2022','2023','2024','2025'];
+  const filtYears=selYear==='all'?years:years.filter(y=>y===selYear);
+
+  mkChart('arrLine2','line',{
+    labels:filtYears,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:filtYears.map(y=>getARRVal(c,y)),
+      borderColor:COL[c],
+      backgroundColor:COL[c]+'20',
+      borderWidth:3,
+      pointRadius:6,
+      pointBackgroundColor:COL[c],
+      pointBorderColor:'#fff',
+      pointBorderWidth:2,
+      tension:0.4,
+      fill:true,
+      spanGaps:true
+    }))
+  },bOpts('ARR ($B)'));
+
+  mkChart('valBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[
+      {label:'Valuation $B',data:cos.map(c=>VAL25[c]||0),backgroundColor:cos.map(c=>COL[c]+'80'),borderRadius:8},
+      {label:'ARR $B',data:cos.map(c=>ARR25[c]||0),backgroundColor:cos.map(c=>COL[c]),borderRadius:8},
+    ]
+  },bOpts('$B'));
+
+  const periods=['2022→23','2023→24','2024→25'];
+  const filtPeriods=selYear==='all'?periods:periods.filter(p=>p.includes(selYear));
+  const periodIdx={'2022→23':0,'2023→24':1,'2024→25':2};
+  mkChart('growthBar','bar',{
+    labels:filtPeriods,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:filtPeriods.map(p=>(GROWTH[c]||[])[periodIdx[p]]??null),
+      backgroundColor:COL[c],
+      borderRadius:8,
+    }))
+  },bOpts('Growth %'));
+
+  document.getElementById('segStack').innerHTML=`
+    <div style="display:flex;gap:10px;margin-bottom:16px;font-size:11px;color:#64748b;font-weight:600">
+      <span><span style="color:#10b981">■</span> Consumer</span>
+      <span><span style="color:#8b5cf6">■</span> Enterprise</span>
+      <span><span style="color:#f59e0b">■</span> API</span>
+    </div>
+    ${cos.map(c=>{
+      const d=SEG[c];
+      return `<div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:600;color:${COL[c]};margin-bottom:6px">${c.split(' ')[0]}</div>
+        <div style="display:flex;height:32px;border-radius:8px;overflow:hidden;border:2px solid ${COL[c]}40">
+          ${d.c?`<div style="flex:${d.c};background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${d.c}%</div>`:''}
+          ${d.e?`<div style="flex:${d.e};background:#8b5cf6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${d.e}%</div>`:''}
+          ${d.a?`<div style="flex:${d.a};background:#f59e0b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${d.a}%</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 2: PROFITABILITY
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP2(cos){
+  const mYears=['2023','2024','2025'];
+  const filtMY=selYear==='all'?mYears:mYears.filter(y=>y===selYear);
+
+  mkChart('marginLine','line',{
+    labels:filtMY,
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:filtMY.map(y=>MARGIN[c]?.[y]??null),
+      borderColor:COL[c],
+      backgroundColor:COL[c]+'20',
+      borderWidth:3,
+      pointRadius:6,
+      pointBackgroundColor:COL[c],
+      pointBorderColor:'#fff',
+      pointBorderWidth:2,
+      tension:0.4,
+      fill:true,
+      spanGaps:true
+    }))
+  },bOpts('Gross Margin (%)'));
+
+  const ltcos=cos.filter(c=>LTVCAC[c]);
+  if(ltcos.length){
+    mkChart('ltvcacBar','bar',{
+      labels:ltcos.map(c=>c.split(' ')[0]),
+      datasets:[{
+        label:'LTV:CAC Ratio',
+        data:ltcos.map(c=>LTVCAC[c]),
+        backgroundColor:ltcos.map(c=>COL[c]),
+        borderRadius:8,
+        borderSkipped:false
+      }]
+    },{
+      ...bOpts('Ratio'),
+      plugins:{
+        ...bOpts().plugins,
+        legend:{display:false},
+        tooltip:ttp,
+        annotation:{
+          annotations:{
+            line1:{
+              type:'line',
+              yMin:3,
+              yMax:3,
+              borderColor:'#10b981',
+              borderWidth:2,
+              borderDash:[5,5],
+              label:{
+                content:'Target: 3:1',
+                display:true,
+                position:'end',
+                backgroundColor:'#10b981',
+                color:'#fff',
+                font:{weight:'bold',size:10}
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  const arpuCos=cos.filter(c=>ARPU_D[c]);
+  const filtAY=selYear==='all'?['2023','2024','2025']:['2023','2024','2025'].filter(y=>y===selYear);
+  if(arpuCos.length&&filtAY.length){
+    mkChart('arpuBar','bar',{
+      labels:arpuCos.map(c=>c.split(' ')[0]),
+      datasets:filtAY.map(y=>({
+        label:y,
+        data:arpuCos.map(c=>ARPU_D[c]?.[y]??null),
+        backgroundColor:arpuCos.map(c=>{
+          const opacity=y==='2023'?'40':y==='2024'?'70':'FF';
+          return COL[c]+opacity;
+        }),
+        borderRadius:8,
+      }))
+    },bOpts('ARPU ($)'));
+  }
+
+  mkChart('synergyBar','bar',{
+    labels:['OpenAI+MSFT','Anth+Cloud','Meta Open','xAI+Tesla'],
+    datasets:[
+      {label:'Synergy $B',data:[50,25,20,15],backgroundColor:'#8b5cf6',borderRadius:8},
+      {label:'Probability %',data:[70,50,90,60],backgroundColor:'#06b6d4',borderRadius:8},
+    ]
+  },bOpts());
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 3: COMPARATIVE ANALYSIS (NEW!)
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP3Comparative(cos){
+  // Comparison Table
+  const compData=cos.map(c=>({
+    company:c,
+    arr:ARR25[c]||0,
+    margin:MARGIN[c]?.['2025']||0,
+    growth:(GROWTH[c]||[])[2]||0,
+    ltvcac:LTVCAC[c]||0,
+    valMult:VAL_MULT[c]||0,
+    score:calcCompScore(c)
+  })).sort((a,b)=>b.score-a.score);
+
+  const tbl=document.getElementById('compTable');
+  tbl.innerHTML=`
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Company</th>
+        <th>ARR ($B)</th>
+        <th>Margin (%)</th>
+        <th>Growth (%)</th>
+        <th>LTV:CAC</th>
+        <th>Val Multiple</th>
+        <th>Overall Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${compData.map((d,i)=>`
+        <tr onclick="triggerCrossFilter('${d.company}')" class="${i===0?'comp-winner':''}">
+          <td><span class="comp-rank" style="color:${COL[d.company]}">#${i+1}</span></td>
+          <td style="font-weight:700;color:${COL[d.company]}">${d.company.split(' ')[0]}</td>
+          <td>$${d.arr.toFixed(1)}B</td>
+          <td>${d.margin}%</td>
+          <td>${d.growth>0?'+'+d.growth+'%':'N/A'}</td>
+          <td>${d.ltvcac>0?d.ltvcac.toFixed(1)+':1':'N/A'}</td>
+          <td>${d.valMult.toFixed(1)}×</td>
+          <td><span class="comp-score ${d.score>=80?'score-high':d.score>=60?'score-mid':'score-low'}">${d.score}/100</span></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
+
+  // Head-to-Head Radar
+  if(cos.includes('Anthropic')&&cos.includes('OpenAI')){
+    mkChart('headToHeadRadar','radar',{
+      labels:['Revenue','Margin','Growth','Efficiency','Value','Enterprise%'],
+      datasets:[
+        {
+          label:'Anthropic',
+          data:[
+            (ARR25['Anthropic']/25)*100,
+            MARGIN['Anthropic']['2025'],
+            Math.min((GROWTH['Anthropic'][2]/1400)*100,100),
+            (LTVCAC['Anthropic']/30)*100,
+            100-(VAL_MULT['Anthropic']/100)*100,
+            SEG['Anthropic'].e
+          ],
+          borderColor:COL['Anthropic'],
+          backgroundColor:COL['Anthropic']+'30',
+          borderWidth:3,
+          pointBackgroundColor:COL['Anthropic'],
+          pointBorderColor:'#fff',
+          pointBorderWidth:2,
+          pointRadius:5
+        },
+        {
+          label:'OpenAI',
+          data:[
+            (ARR25['OpenAI']/25)*100,
+            MARGIN['OpenAI']['2025'],
+            Math.min((GROWTH['OpenAI'][2]/1400)*100,100),
+            (LTVCAC['OpenAI']/30)*100,
+            100-(VAL_MULT['OpenAI']/100)*100,
+            SEG['OpenAI'].e
+          ],
+          borderColor:COL['OpenAI'],
+          backgroundColor:COL['OpenAI']+'30',
+          borderWidth:3,
+          pointBackgroundColor:COL['OpenAI'],
+          pointBorderColor:'#fff',
+          pointBorderWidth:2,
+          pointRadius:5
+        }
+      ]
+    },{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#64748b',font:{size:11,weight:'600'},boxWidth:12}},tooltip:ttp},
+      scales:{r:{backgroundColor:'#f8fafc',grid:{color:'#e2e8f0'},ticks:{backdropColor:'transparent',color:'#64748b',font:{size:10}},pointLabels:{color:'#1e293b',font:{size:11,weight:'600'}},min:0,max:100}}
+    });
+  }
+
+  // Efficiency vs Growth Scatter
+  const scatterData=cos.filter(c=>MARGIN[c]&&GROWTH[c]).map(c=>({
+    x:(GROWTH[c]||[])[2]||0,
+    y:MARGIN[c]['2025']||0,
+    company:c
+  }));
+
+  mkChart('efficiencyScatter','scatter',{
+    datasets:scatterData.map(d=>({
+      label:d.company.split(' ')[0],
+      data:[{x:d.x,y:d.y}],
+      backgroundColor:COL[d.company],
+      pointRadius:10,
+      pointHoverRadius:14,
+      pointBorderColor:'#fff',
+      pointBorderWidth:2
+    }))
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{color:'#64748b',font:{size:11,weight:'600'},boxWidth:12}},
+      tooltip:{
+        ...ttp,
+        callbacks:{
+          label:function(ctx){
+            return `${ctx.dataset.label}: Growth ${ctx.parsed.x.toFixed(0)}%, Margin ${ctx.parsed.y}%`;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:'#f1f5f9'},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'YoY Growth %',color:'#64748b',font:{size:11,weight:'600'}}},
+      y:{grid:{color:'#f1f5f9'},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'Gross Margin %',color:'#64748b',font:{size:11,weight:'600'}}}
+    }
+  });
+}
+
+function calcCompScore(c){
+  const arr=(ARR25[c]||0)/25*20;
+  const margin=(MARGIN[c]?.['2025']||0)/82*25;
+  const growth=Math.min(((GROWTH[c]||[])[2]||0)/1400*20,20);
+  const ltv=(LTVCAC[c]||0)/30*20;
+  const valAdj=100-(VAL_MULT[c]||30)/100*15;
+  return Math.round(arr+margin+growth+ltv+valAdj);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 4: RANKINGS (NEW!)
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP4Rankings(cos){
+  const rankings=[
+    {cat:'Revenue Champion',winner:'Google (Gemini)',value:'$25B',runnerup:'OpenAI',adv:'+25%'},
+    {cat:'Profitability Champion',winner:'Anthropic',value:'77%',runnerup:'Meta (Llama)',adv:'+6pp'},
+    {cat:'Growth Champion',winner:'xAI (Grok)',value:'+1400%',runnerup:'Anthropic',adv:'+187%'},
+    {cat:'Efficiency Champion',winner:'Anthropic',value:'30:1 LTV:CAC',runnerup:'OpenAI',adv:'+34%'},
+    {cat:'Value Champion',winner:'OpenAI',value:'15× ARR',runnerup:'Anthropic',adv:'26% cheaper'},
+    {cat:'Scale Champion',winner:'OpenAI',value:'800M users',runnerup:'Google (Gemini)',adv:'+78%'},
+  ];
+
+  document.getElementById('rankingsTable').innerHTML=rankings.map(r=>`
+    <tr>
+      <td style="font-weight:700">${r.cat}</td>
+      <td style="font-weight:700;color:${COL[r.winner]||'#0ea5e9'}">${r.winner.split(' ')[0]}</td>
+      <td>${r.value}</td>
+      <td style="color:#64748b">${r.runnerup.split(' ')[0]}</td>
+      <td style="color:#10b981;font-weight:600">${r.adv}</td>
+    </tr>
+  `).join('');
+
+  // Sustainability Score Bar
+  const sustScores={
+    'Anthropic':91,'Meta (Llama)':85,'OpenAI':78,'Google (Gemini)':72,'xAI (Grok)':58
+  };
+  const filtSust=Object.entries(sustScores).filter(([c])=>cos.includes(c)).sort((a,b)=>b[1]-a[1]);
+
+  mkChart('sustScoreBar','bar',{
+    labels:filtSust.map(([c])=>c.split(' ')[0]),
+    datasets:[{
+      label:'Sustainability Score',
+      data:filtSust.map(([,s])=>s),
+      backgroundColor:filtSust.map(([c])=>COL[c]),
+      borderRadius:10,
+      borderSkipped:false
+    }]
+  },{...bOpts('Score (out of 100)'),plugins:{...bOpts().plugins,legend:{display:false}},scales:{...bOpts().scales,y:{...bOpts().scales.y,min:0,max:100}}});
+
+  // Heatmap
+  const metrics=['Revenue','Margin','Growth','Efficiency','Valuation'];
+  const heatData=cos.map(c=>{
+    return{
+      company:c,
+      scores:[
+        getRankScore(c,'revenue'),
+        getRankScore(c,'margin'),
+        getRankScore(c,'growth'),
+        getRankScore(c,'efficiency'),
+        getRankScore(c,'valuation')
+      ]
+    };
+  });
+
+  document.getElementById('heatmapGrid').innerHTML=`
+    <table style="width:100%;border-collapse:separate;border-spacing:6px">
+      <thead>
+        <tr style="background:var(--bg3)">
+          <th style="padding:10px;text-align:left;font-size:11px;font-weight:700;color:var(--text)">Company</th>
+          ${metrics.map(m=>`<th style="padding:10px;text-align:center;font-size:11px;font-weight:700;color:var(--text)">${m}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${heatData.map(d=>`
+          <tr>
+            <td style="padding:10px;font-weight:700;color:${COL[d.company]}">${d.company.split(' ')[0]}</td>
+            ${d.scores.map(s=>`<td style="padding:10px;text-align:center"><span class="comp-score ${s>=8?'score-high':s>=5?'score-mid':'score-low'}">${s}/10</span></td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function getRankScore(c,metric){
+  if(metric==='revenue')return Math.round((ARR25[c]||0)/25*10);
+  if(metric==='margin')return Math.round((MARGIN[c]?.['2025']||0)/82*10);
+  if(metric==='growth')return Math.min(Math.round(((GROWTH[c]||[])[2]||0)/1400*10),10);
+  if(metric==='efficiency')return Math.round((LTVCAC[c]||0)/30*10);
+  if(metric==='valuation')return Math.round((1-(VAL_MULT[c]||30)/100)*10);
+  return 0;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 5: AI MODELS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP5(cos){
+  const benchArr=Object.entries(BENCHMARKS).map(([name,data])=>({name,...data}));
+  const filtered=benchArr.filter(b=>cos.includes(b.company));
+
+  document.getElementById('benchTable').innerHTML=filtered.map(b=>`
+    <tr onclick="triggerCrossFilter('${b.company}')">
+      <td style="font-weight:700;color:${COL[b.company]}">${b.name}</td>
+      <td>${b.company.split(' ')[0]}</td>
+      <td class="${b.mmlu>=88?'score-high':b.mmlu>=86?'score-mid':'score-low'}" style="font-weight:600">${b.mmlu.toFixed(1)}</td>
+      <td class="${b.code>=90?'score-high':b.code>=85?'score-mid':'score-low'}" style="font-weight:600">${b.code.toFixed(1)}</td>
+      <td class="${b.math>=76?'score-high':b.math>=70?'score-mid':'score-low'}" style="font-weight:600">${b.math.toFixed(1)}</td>
+      <td class="score-high" style="font-weight:700">${b.overall.toFixed(1)}</td>
+    </tr>
+  `).join('');
+
+  mkChart('codingBar','bar',{
+    labels:filtered.map(b=>b.name.split(' ').slice(0,2).join(' ')),
+    datasets:[{
+      label:'HumanEval Pass@1',
+      data:filtered.map(b=>b.code),
+      backgroundColor:filtered.map(b=>COL[b.company]),
+      borderRadius:10,
+      borderSkipped:false
+    }]
+  },{...bOpts('Score'),plugins:{...bOpts().plugins,legend:{display:false}},scales:{...bOpts().scales,y:{...bOpts().scales.y,min:80,max:95}}});
+
+  mkChart('overallBar','bar',{
+    labels:filtered.map(b=>b.name.split(' ').slice(0,2).join(' ')),
+    datasets:[{
+      label:'Overall Intelligence',
+      data:filtered.map(b=>b.overall),
+      backgroundColor:filtered.map(b=>COL[b.company]),
+      borderRadius:10,
+      borderSkipped:false
+    }]
+  },{...bOpts('Score'),plugins:{...bOpts().plugins,legend:{display:false}},scales:{...bOpts().scales,y:{...bOpts().scales.y,min:80,max:92}}});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE 6: FUTURE GROWTH
+// ══════════════════════════════════════════════════════════════════════════════
+function renderP6(cos){
+  mkChart('projLine','line',{
+    labels:['2025','2026','2028','2030'],
+    datasets:cos.map(c=>({
+      label:c.split(' ')[0],
+      data:PROJ[c],
+      borderColor:COL[c],
+      backgroundColor:COL[c]+'20',
+      borderWidth:3,
+      pointRadius:6,
+      pointBackgroundColor:COL[c],
+      pointBorderColor:'#fff',
+      pointBorderWidth:2,
+      tension:0.4,
+      fill:true,
+      borderDash:c==='xAI (Grok)'?[6,4]:[]
+    }))
+  },bOpts('Revenue ($B)'));
+
+  mkChart('mktArea','line',{
+    labels:['2023','2024','2025','2026','2028','2030'],
+    datasets:[{
+      label:'Total AI Market $B',
+      data:[10,28,70,120,250,500],
+      borderColor:'#06b6d4',
+      backgroundColor:'#06b6d440',
+      borderWidth:3,
+      pointRadius:6,
+      pointBackgroundColor:'#06b6d4',
+      pointBorderColor:'#fff',
+      pointBorderWidth:2,
+      tension:0.4,
+      fill:true
+    }]
+  },{...bOpts('Market Size ($B)'),plugins:{...bOpts().plugins,legend:{display:false}}});
+
+  mkChart('scenarioBar','bar',{
+    labels:cos.map(c=>c.split(' ')[0]),
+    datasets:[
+      {label:'🟢 Bull',data:cos.map(c=>BULL[c]||0),backgroundColor:'#10b98160',borderRadius:8,borderColor:'#10b981',borderWidth:2},
+      {label:'🔵 Base',data:cos.map(c=>BASE[c]||0),backgroundColor:'#06b6d4',borderRadius:8},
+      {label:'🔴 Bear',data:cos.map(c=>BEAR[c]||0),backgroundColor:'#ef444480',borderRadius:8},
+    ]
+  },bOpts('2030 ARR ($B)'));
+}
+
+function showTab(n){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===n));
+}
+
+renderAll();
+</script>
+</body>
+</html>
