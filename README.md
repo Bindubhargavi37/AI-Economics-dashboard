@@ -3,7 +3,7 @@ Analyzing the Revenue Strength and Market Leadership of the "Big Five" AI Compan
 This repository contains an interactive, data-driven dashboard that analyzes the financial trajectories and business models of the five most influential AI entities: OpenAI, Anthropic, Google (Gemini), Meta (Llama), and xAI (Grok).
 
 📊 Live Dashboard
-https://bindubhargavi37.github.io/AI-Economics-dashboard/
+
 
 🎯 Project Objective
 The DA-AI (Data Analytics – Artificial Intelligence) Project sets out to determine which AI company possesses the strongest long-term revenue engine and the most defensible business model. It addresses the lack of a single, comparable financial view across both public and private AI giants.
